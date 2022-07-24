@@ -6,8 +6,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
-      '@hamflx/prosemirror-diff': resolve(__dirname, '../src/index.js')
+      '@': resolve(__dirname, 'src')
     }
   },
   plugins: [vue()]

@@ -18,7 +18,7 @@ import { TaskItem } from '@tiptap/extension-task-item'
 import { Blockquote } from '@tiptap/extension-blockquote'
 import { CodeBlock } from '@tiptap/extension-code-block'
 import { Table } from '@tiptap/extension-table'
-import {DiffMarkExtension} from "../lib/index.js";
+import {DiffMarkExtension} from './diffMarkExtension.js'
 
 export const createEditor = () => {
   const extensions = [

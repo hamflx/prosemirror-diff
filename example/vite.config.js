@@ -7,7 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
-      '@hamflx/prosemirror-diff': resolve(__dirname, 'lib/index.js')
+      '@hamflx/prosemirror-diff': resolve(__dirname, '../src/index.js')
     }
   },
   plugins: [vue()]

@@ -1,5 +1,5 @@
 import { Mark, mergeAttributes } from '@tiptap/core'
-import { DiffType } from './DiffType.js'
+import { DiffType } from '@hamflx/prosemirror-diff'
 
 export const DiffMarkExtension = Mark.create({
     name: 'diffMark',

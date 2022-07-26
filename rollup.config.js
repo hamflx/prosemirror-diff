@@ -32,7 +32,9 @@ export default {
   ],
   plugins: [
     sourcemaps(),
-    resolve(),
+    resolve({
+      resolveOnly: ['core-js']
+    }),
     commonjs(),
     babel({
       babelHelpers: 'bundled',

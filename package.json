@@ -1,6 +1,6 @@
 {
   "name": "@hamflx/prosemirror-diff",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "description": "PromiseMirror state diff",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",
@@ -9,15 +9,18 @@
     "src",
     "lib"
   ],
+  "browserslist": "> 0.15%, not dead, not android > 0, not and_ff > 0, not and_chr > 0, not and_uc > 0, not samsung > 0, not ios > 0, not opera > 0, not op_mini 1",
   "dependencies": {
     "diff-match-patch": "^1.0.5",
     "prosemirror-model": "^1.18.1"
   },
   "devDependencies": {
     "@babel/core": "^7.18.9",
+    "@babel/preset-env": "^7.18.9",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-commonjs": "^22.0.1",
     "@rollup/plugin-node-resolve": "^13.3.0",
+    "core-js": "^3.24.0",
     "rollup": "^2.77.0",
     "rollup-plugin-sourcemaps": "^0.6.3"
   },

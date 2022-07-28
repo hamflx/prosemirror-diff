@@ -58,7 +58,7 @@ export const patchDocumentNode = (schema, oldNode, newNode) => {
       const oldAfterMatchChildren = diffOldChildren.slice(oldEndIndex)
       const newAfterMatchChildren = diffNewChildren.slice(newEndIndex)
       console.log('==> after match', oldAfterMatchChildren.length, newAfterMatchChildren.length)
-      finalRightChildren.push(...patchRemainNodes(schema, oldAfterMatchChildren, newAfterMatchChildren))
+      finalRightChildren.unshift(...patchRemainNodes(schema, oldAfterMatchChildren, newAfterMatchChildren))
     } else {
       console.log('==> no best match found')
       finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren))

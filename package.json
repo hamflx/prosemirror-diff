@@ -1,6 +1,6 @@
 {
   "name": "@hamflx/prosemirror-diff",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "PromiseMirror state diff",
   "main": "lib/index.cjs.js",
   "module": "lib/index.esm.js",

@@ -1,6 +1,5 @@
 import path from 'path'
 import sourcemaps from 'rollup-plugin-sourcemaps'
-import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import babel from '@rollup/plugin-babel'
 
@@ -9,6 +8,7 @@ const input = path.resolve(__dirname, 'src/index.js')
 
 export default {
   input,
+  external: id => /^(diff-match-patch|prosemirror-model)/.test(id),
   output: [
     {
       name,
@@ -32,9 +32,6 @@ export default {
   ],
   plugins: [
     sourcemaps(),
-    resolve({
-      resolveOnly: ['core-js']
-    }),
     commonjs(),
     babel({
       babelHelpers: 'bundled',

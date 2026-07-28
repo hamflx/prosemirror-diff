@@ -2,7 +2,128 @@ import {diff_match_patch} from 'diff-match-patch'
 import {Fragment, Node} from 'prosemirror-model'
 import {DiffType} from "./DiffType.js";
 
-export const patchDocumentNode = (schema, oldNode, newNode) => {
+/**
+ * Tokenizes text into words, whitespace, and punctuation.
+ * Each token preserves its position in the original text.
+ * @param {string} text - The text to tokenize
+ * @returns {Array<{text: string, start: number, end: number}>}
+ */
+export const tokenizeText = (text) => {
+  const tokens = []
+  const regex = /(\w+|\s+|[^\w\s]+)/g
+  let match
+  while ((match = regex.exec(text)) !== null) {
+    tokens.push({
+      text: match[0],
+      start: match.index,
+      end: match.index + match[0].length
+    })
+  }
+  return tokens
+}
+
+/**
+ * Converts token arrays to unique character strings for diff-match-patch.
+ * Similar to diff_linesToChars_ but for word tokens.
+ * @param {Array<{text: string}>} tokens1 - First token array
+ * @param {Array<{text: string}>} tokens2 - Second token array
+ * @returns {{chars1: string, chars2: string, tokenArray: string[]}}
+ */
+const tokensToChars = (tokens1, tokens2) => {
+  const tokenMap = new Map()
+  const tokenArray = []
+  let charCode = 0
+
+  const encode = (tokens) => {
+    return tokens.map(token => {
+      if (!tokenMap.has(token.text)) {
+        tokenMap.set(token.text, charCode)
+        tokenArray.push(token.text)
+        charCode++
+      }
+      return String.fromCharCode(tokenMap.get(token.text))
+    }).join('')
+  }
+
+  return {
+    chars1: encode(tokens1),
+    chars2: encode(tokens2),
+    tokenArray
+  }
+}
+
+/**
+ * Performs two-tier diff: word-level grouping with character-level detail.
+ * 1. Tokenizes text into words and finds which words changed
+ * 2. For adjacent deleted/inserted word pairs, does character-level diff
+ * @param {string} oldText - Original text
+ * @param {string} newText - New text
+ * @returns {Array<{type: number, text: string, level: 'word'|'char'}>} - Array of diff objects with level indicator
+ */
+export const diffWordsWithDetail = (oldText, newText) => {
+  const dmp = new diff_match_patch()
+
+  // Step 1: Tokenize both texts
+  const oldTokens = tokenizeText(oldText)
+  const newTokens = tokenizeText(newText)
+
+  // Handle empty cases
+  if (oldTokens.length === 0 && newTokens.length === 0) {
+    return []
+  }
+  if (oldTokens.length === 0) {
+    return [{ type: DiffType.Inserted, text: newText, level: 'word' }]
+  }
+  if (newTokens.length === 0) {
+    return [{ type: DiffType.Deleted, text: oldText, level: 'word' }]
+  }
+
+  // Step 2: Convert to chars and do word-level diff
+  const { chars1, chars2, tokenArray } = tokensToChars(oldTokens, newTokens)
+  const wordDiff = dmp.diff_main(chars1, chars2)
+
+  // Step 3: Process results - for changed word pairs, do character diff
+  const result = []
+  let i = 0
+  while (i < wordDiff.length) {
+    const [type, chars] = wordDiff[i]
+
+    if (type === DiffType.Unchanged) {
+      // Pass through unchanged tokens
+      for (const char of chars) {
+        result.push({ type: DiffType.Unchanged, text: tokenArray[char.charCodeAt(0)], level: 'word' })
+      }
+      i++
+    } else if (type === DiffType.Deleted && i + 1 < wordDiff.length && wordDiff[i + 1][0] === DiffType.Inserted) {
+      // Adjacent delete + insert: show deletions first, then insertions (no interleaving)
+      const deletedText = [...chars].map(c => tokenArray[c.charCodeAt(0)]).join('')
+      const insertedText = [...wordDiff[i + 1][1]].map(c => tokenArray[c.charCodeAt(0)]).join('')
+      result.push({ type: DiffType.Deleted, text: deletedText, level: 'word' })
+      result.push({ type: DiffType.Inserted, text: insertedText, level: 'word' })
+      i += 2
+    } else {
+      // Orphan delete or insert: show whole token(s) as a unit (word-level change)
+      const text = [...chars].map(c => tokenArray[c.charCodeAt(0)]).join('')
+      result.push({ type, text, level: 'word' })
+      i++
+    }
+  }
+
+  // Merge consecutive segments of the same type AND level
+  const merged = []
+  for (const segment of result) {
+    const last = merged[merged.length - 1]
+    if (last && last.type === segment.type && last.level === segment.level) {
+      last.text += segment.text
+    } else {
+      merged.push({ ...segment })
+    }
+  }
+
+  return merged
+}
+
+export const patchDocumentNode = (schema, oldNode, newNode, options = {}) => {
   assertNodeTypeEqual(oldNode, newNode)
 
   const finalLeftChildren = []
@@ -17,7 +138,6 @@ export const patchDocumentNode = (schema, oldNode, newNode) => {
   let left = 0
   let right = 0
 
-  console.log('==> searching same left')
   for (; left < minChildLen; left++) {
     const oldChild = oldChildren[left]
     const newChild = newChildren[left]
@@ -27,7 +147,6 @@ export const patchDocumentNode = (schema, oldNode, newNode) => {
     finalLeftChildren.push(...ensureArray(oldChild))
   }
 
-  console.log('==> searching same right')
   for (; right + left + 1 < minChildLen; right++) {
     const oldChild = oldChildren[oldChildLen - right - 1]
     const newChild = newChildren[newChildLen - right - 1]
@@ -37,42 +156,35 @@ export const patchDocumentNode = (schema, oldNode, newNode) => {
     finalRightChildren.unshift(...ensureArray(oldChild))
   }
 
-  console.log(`==> eq left:${left}, right:${right}`, [...finalLeftChildren], [...finalRightChildren])
-
   const diffOldChildren = oldChildren.slice(left, oldChildLen - right)
   const diffNewChildren = newChildren.slice(left, newChildLen - right)
-  console.log('==> diff children', diffOldChildren.length, diffNewChildren.length)
+
   if (diffOldChildren.length && diffNewChildren.length) {
     const matchedNodes = matchNodes(schema, diffOldChildren, diffNewChildren).sort((a, b) => b.count - a.count)
     const bestMatch = matchedNodes[0]
     if (bestMatch) {
-      console.log('==> bestMatch', bestMatch)
       const {oldStartIndex, newStartIndex, oldEndIndex, newEndIndex} = bestMatch
       const oldBeforeMatchChildren = diffOldChildren.slice(0, oldStartIndex)
       const newBeforeMatchChildren = diffNewChildren.slice(0, newStartIndex)
-      console.log('==> before match', oldBeforeMatchChildren.length, newBeforeMatchChildren.length, oldBeforeMatchChildren, newBeforeMatchChildren)
-      finalLeftChildren.push(...patchRemainNodes(schema, oldBeforeMatchChildren, newBeforeMatchChildren))
+
+      finalLeftChildren.push(...patchRemainNodes(schema, oldBeforeMatchChildren, newBeforeMatchChildren, options))
       finalLeftChildren.push(...diffOldChildren.slice(oldStartIndex, oldEndIndex))
-      console.log('==> match', oldEndIndex - oldStartIndex)
 
       const oldAfterMatchChildren = diffOldChildren.slice(oldEndIndex)
       const newAfterMatchChildren = diffNewChildren.slice(newEndIndex)
-      console.log('==> after match', oldAfterMatchChildren.length, newAfterMatchChildren.length)
-      finalRightChildren.unshift(...patchRemainNodes(schema, oldAfterMatchChildren, newAfterMatchChildren))
+
+      finalRightChildren.unshift(...patchRemainNodes(schema, oldAfterMatchChildren, newAfterMatchChildren, options))
     } else {
-      console.log('==> no best match found')
-      finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren))
+      finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren, options))
     }
-    console.log('==> matchedNodes', matchedNodes)
   } else {
-    finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren))
+    finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren, options))
   }
 
   return createNewNode(oldNode, [...finalLeftChildren, ...finalRightChildren])
 }
 
 const matchNodes = (schema, oldChildren, newChildren) => {
-  console.log('==> matchNodes', oldChildren, newChildren)
   const matches = []
   for (let oldStartIndex = 0; oldStartIndex < oldChildren.length; oldStartIndex++) {
     const oldStartNode = oldChildren[oldStartIndex]
@@ -87,7 +199,6 @@ const matchNodes = (schema, oldChildren, newChildren) => {
           break
         }
       }
-      console.log('==> match', oldStartIndex, oldEndIndex, newStartIndex, newEndIndex)
       matches.push({oldStartIndex, newStartIndex, oldEndIndex, newEndIndex, count: newEndIndex - newStartIndex})
     }
   }
@@ -103,7 +214,7 @@ const findMatchNode = (children, node, startIndex = 0) => {
   return -1
 }
 
-const patchRemainNodes = (schema, oldChildren, newChildren) => {
+const patchRemainNodes = (schema, oldChildren, newChildren, options = {}) => {
   const finalLeftChildren = []
     const finalRightChildren = []
   const oldChildLen = oldChildren.length
@@ -118,7 +229,7 @@ const patchRemainNodes = (schema, oldChildren, newChildren) => {
     let updateLeft = !isTextNode(leftOldNode) && matchNodeType(leftOldNode, leftNewNode)
     let updateRight = !isTextNode(rightOldNode) && matchNodeType(rightOldNode, rightNewNode)
     if (Array.isArray(leftOldNode) && Array.isArray(leftNewNode)) {
-      finalLeftChildren.push(...patchTextNodes(schema, leftOldNode, leftNewNode))
+      finalLeftChildren.push(...patchTextNodes(schema, leftOldNode, leftNewNode, options))
       left += 1
       continue
     }
@@ -133,10 +244,10 @@ const patchRemainNodes = (schema, oldChildren, newChildren) => {
       }
     }
     if (updateLeft) {
-      finalLeftChildren.push(patchDocumentNode(schema, leftOldNode, leftNewNode))
+      finalLeftChildren.push(patchDocumentNode(schema, leftOldNode, leftNewNode, options))
       left += 1
     } else if (updateRight) {
-      finalRightChildren.unshift(patchDocumentNode(schema, rightOldNode, rightNewNode))
+      finalRightChildren.unshift(patchDocumentNode(schema, rightOldNode, rightNewNode, options))
       right += 1
     } else {
       // todo
@@ -160,16 +271,25 @@ const patchRemainNodes = (schema, oldChildren, newChildren) => {
   return [...finalLeftChildren, ...finalRightChildren]
 }
 
-export const patchTextNodes = (schema, oldNode, newNode) => {
-  const dmp = new diff_match_patch()
+export const patchTextNodes = (schema, oldNode, newNode, options = {}) => {
+  const { level = 'char' } = options
   const oldText = oldNode.map(n => getNodeText(n)).join('')
   const newText = newNode.map(n => getNodeText(n)).join('')
-  const diff = dmp.diff_main(oldText, newText)
+
+  // Use word-level diff or character-level diff based on option
+  const diff = level === 'word'
+    ? diffWordsWithDetail(oldText, newText)
+    : new diff_match_patch().diff_main(oldText, newText)
   let oldLen = 0
   let newLen = 0
   const res = diff.map(d => {
-    const [type, content] = [d[0], d[1]]
-    const node = createTextNode(schema, content, type !== DiffType.Unchanged ? createDiffMark(schema, type) : [])
+    // Handle both formats: object {type, text, level} or tuple [type, text]
+    const type = d.type !== undefined ? d.type : d[0]
+    const content = d.text !== undefined ? d.text : d[1]
+    // For character-level diff (tuple format), default to 'char' level
+    const level = d.level || 'char'
+    const marks = type !== DiffType.Unchanged ? createDiffMark(schema, type, level) : []
+    const node = createTextNode(schema, content, marks)
     const oldFrom = oldLen
     const oldTo = oldFrom + (type === DiffType.Inserted ? 0 : content.length)
     const newFrom = newLen
@@ -354,12 +474,9 @@ function mapDocumentNode (node, mapper) {
   )
   return mapper(copy) || copy
 }
-export const createDiffMark = (schema, type) => {
-  if (type === DiffType.Inserted) {
-    return schema.mark('diffMark', { type })
-  }
-  if (type === DiffType.Deleted) {
-    return schema.mark('diffMark', { type })
+export const createDiffMark = (schema, type, level = 'char') => {
+  if (type === DiffType.Inserted || type === DiffType.Deleted) {
+    return schema.mark('diffMark', { type, level })
   }
   throw new Error('type is not valid')
 }
@@ -367,10 +484,19 @@ export const createTextNode = (schema, content, marks = []) => {
   return schema.text(content, marks)
 }
 
-export const diffEditor = (schema, oldDoc, newDoc) => {
+/**
+ * Computes the diff between two ProseMirror documents.
+ * @param {Schema} schema - The ProseMirror schema
+ * @param {Object} oldDoc - The old document JSON
+ * @param {Object} newDoc - The new document JSON
+ * @param {Object} options - Options for diff behavior
+ * @param {'char'|'word'} options.level - Diff level: 'char' for character-level (default), 'word' for word-level with character detail
+ * @returns {Node} - The diffed document with diff marks applied
+ */
+export const diffEditor = (schema, oldDoc, newDoc, options = {}) => {
   const oldNode = Node.fromJSON(schema, oldDoc)
   const newNode = Node.fromJSON(schema, newDoc)
-  return patchDocumentNode(schema, oldNode, newNode)
+  return patchDocumentNode(schema, oldNode, newNode, options)
 }
 
 // 最终目的：给老的文档添加 mark 标记删除和新增。

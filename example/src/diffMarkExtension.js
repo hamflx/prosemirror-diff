@@ -16,6 +16,12 @@ export const DiffMarkExtension = Mark.create({
                         style: 'background-color: ' + color
                     }
                 }
+            },
+            level: {
+                default: 'char',
+                renderHTML: ({ level }) => ({
+                    'data-diff-level': level
+                })
             }
         }
     },

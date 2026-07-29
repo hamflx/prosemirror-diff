@@ -1,8 +1,224 @@
 import {diff_match_patch} from 'diff-match-patch'
+import {diffArrays} from 'diff'
 import {Fragment, Node} from 'prosemirror-model'
+import {splitGraphemes} from 'unicode-segmenter/grapheme'
 import {DiffType} from "./DiffType.js";
 
-export const patchDocumentNode = (schema, oldNode, newNode) => {
+const MAX_EDIT_LENGTH = 2000
+const DIFF_TIMEOUT_MS = 1000
+
+const createDiffOptions = deadline => ({
+  maxEditLength: MAX_EDIT_LENGTH,
+  timeout: Math.max(1, deadline - Date.now())
+})
+
+const createSegmenter = granularity => {
+  try {
+    return typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+      ? new Intl.Segmenter('en', {granularity})
+      : null
+  } catch (_) {
+    return null
+  }
+}
+
+const wordSegmenter = createSegmenter('word')
+const unicodeWordCharacter = (() => {
+  try {
+    return new RegExp('[\\p{L}\\p{M}\\p{N}_]', 'u')
+  } catch (_) {
+    return /\w/
+  }
+})()
+
+const classifyGrapheme = grapheme => {
+  const firstCharacter = String.fromCodePoint(grapheme.codePointAt(0))
+  if (/\s/.test(firstCharacter)) {
+    return 'space'
+  }
+  return unicodeWordCharacter.test(firstCharacter) ? 'word' : 'other'
+}
+
+const fallbackTokenizeText = text => {
+  const tokens = []
+  let tokenText = ''
+  let tokenType = null
+  let tokenStart = 0
+  let offset = 0
+
+  for (const grapheme of splitGraphemes(text)) {
+    const characterType = classifyGrapheme(grapheme)
+    if (tokenText && characterType !== tokenType) {
+      tokens.push({text: tokenText, start: tokenStart, end: offset})
+      tokenText = ''
+      tokenStart = offset
+    }
+    tokenType = characterType
+    tokenText += grapheme
+    offset += grapheme.length
+  }
+
+  if (tokenText) {
+    tokens.push({text: tokenText, start: tokenStart, end: offset})
+  }
+  return tokens
+}
+
+/**
+ * Splits text into words, whitespace and punctuation without losing offsets.
+ */
+export const tokenizeText = (text, segmenter = wordSegmenter) => {
+  if (typeof text !== 'string') {
+    throw new TypeError('text must be a string')
+  }
+  if (!text) {
+    return []
+  }
+  if (!segmenter) {
+    return fallbackTokenizeText(text)
+  }
+  return [...segmenter.segment(text)].flatMap(({segment, index}) => (
+    fallbackTokenizeText(segment).map(token => ({
+      text: token.text,
+      start: index + token.start,
+      end: index + token.end
+    }))
+  ))
+}
+
+const tokenizeGraphemes = text => [...splitGraphemes(text)]
+
+const mergeDiffSegments = segments => {
+  const merged = []
+  for (const segment of segments) {
+    if (!segment.text) {
+      continue
+    }
+    const previous = merged[merged.length - 1]
+    if (previous && previous.type === segment.type && previous.level === segment.level) {
+      previous.text += segment.text
+    } else {
+      merged.push({...segment})
+    }
+  }
+  return merged
+}
+
+const safeReplacement = (oldText, newText, level) => mergeDiffSegments([
+  {type: DiffType.Deleted, text: oldText, level},
+  {type: DiffType.Inserted, text: newText, level}
+])
+
+const boundaryFallback = (oldTokens, newTokens, changeLevel, unchangedLevel = changeLevel) => {
+  let prefixLength = 0
+  const maxPrefixLength = Math.min(oldTokens.length, newTokens.length)
+  while (prefixLength < maxPrefixLength && oldTokens[prefixLength] === newTokens[prefixLength]) {
+    prefixLength++
+  }
+
+  let suffixLength = 0
+  const maxSuffixLength = maxPrefixLength - prefixLength
+  while (suffixLength < maxSuffixLength &&
+    oldTokens[oldTokens.length - suffixLength - 1] === newTokens[newTokens.length - suffixLength - 1]) {
+    suffixLength++
+  }
+
+  const oldMiddleEnd = oldTokens.length - suffixLength
+  const newMiddleEnd = newTokens.length - suffixLength
+  return mergeDiffSegments([
+    {type: DiffType.Unchanged, text: oldTokens.slice(0, prefixLength).join(''), level: unchangedLevel},
+    {type: DiffType.Deleted, text: oldTokens.slice(prefixLength, oldMiddleEnd).join(''), level: changeLevel},
+    {type: DiffType.Inserted, text: newTokens.slice(prefixLength, newMiddleEnd).join(''), level: changeLevel},
+    {type: DiffType.Unchanged, text: oldTokens.slice(oldMiddleEnd).join(''), level: unchangedLevel}
+  ])
+}
+
+const changeText = change => Array.isArray(change.value)
+  ? change.value.join('')
+  : change.value
+
+const changeType = change => change.added
+  ? DiffType.Inserted
+  : change.removed
+    ? DiffType.Deleted
+    : DiffType.Unchanged
+
+const diffReplacement = (oldText, newText, deadline) => {
+  const oldGraphemes = tokenizeGraphemes(oldText)
+  const newGraphemes = tokenizeGraphemes(newText)
+  const changes = Date.now() < deadline
+    ? diffArrays(oldGraphemes, newGraphemes, createDiffOptions(deadline))
+    : undefined
+  if (!changes) {
+    return boundaryFallback(oldGraphemes, newGraphemes, 'word', 'char')
+  }
+  return mergeDiffSegments(changes.map(change => ({
+    type: changeType(change),
+    text: changeText(change),
+    level: 'char'
+  })))
+}
+
+/**
+ * Locates changes at word boundaries and refines replacement groups by grapheme.
+ * Every result can reconstruct the source texts by excluding insertions or deletions.
+ */
+export const diffWordsWithDetail = (oldText, newText) => {
+  if (typeof oldText !== 'string' || typeof newText !== 'string') {
+    throw new TypeError('oldText and newText must be strings')
+  }
+  if (!oldText && !newText) {
+    return []
+  }
+
+  const deadline = Date.now() + DIFF_TIMEOUT_MS
+  const oldTokens = tokenizeText(oldText).map(({text}) => text)
+  const newTokens = tokenizeText(newText).map(({text}) => text)
+  const changes = diffArrays(oldTokens, newTokens, createDiffOptions(deadline))
+  if (!changes) {
+    return boundaryFallback(oldTokens, newTokens, 'word')
+  }
+
+  const result = []
+  for (let index = 0; index < changes.length;) {
+    const change = changes[index]
+    if (!change.added && !change.removed) {
+      result.push({type: DiffType.Unchanged, text: changeText(change), level: 'word'})
+      index++
+      continue
+    }
+
+    let deletedText = ''
+    let insertedText = ''
+    while (index < changes.length && (changes[index].added || changes[index].removed)) {
+      const changedText = changeText(changes[index])
+      if (changes[index].removed) {
+        deletedText += changedText
+      } else {
+        insertedText += changedText
+      }
+      index++
+    }
+
+    if (deletedText && insertedText) {
+      result.push(...diffReplacement(deletedText, insertedText, deadline))
+    } else {
+      result.push(...safeReplacement(deletedText, insertedText, 'word'))
+    }
+  }
+  return mergeDiffSegments(result)
+}
+
+const getDiffLevel = options => {
+  const level = options?.level ?? 'char'
+  if (level !== 'char' && level !== 'word') {
+    throw new RangeError("options.level must be either 'char' or 'word'")
+  }
+  return level
+}
+
+export const patchDocumentNode = (schema, oldNode, newNode, options = {}) => {
+  getDiffLevel(options)
   assertNodeTypeEqual(oldNode, newNode)
 
   const finalLeftChildren = []
@@ -17,7 +233,6 @@ export const patchDocumentNode = (schema, oldNode, newNode) => {
   let left = 0
   let right = 0
 
-  console.log('==> searching same left')
   for (; left < minChildLen; left++) {
     const oldChild = oldChildren[left]
     const newChild = newChildren[left]
@@ -27,7 +242,6 @@ export const patchDocumentNode = (schema, oldNode, newNode) => {
     finalLeftChildren.push(...ensureArray(oldChild))
   }
 
-  console.log('==> searching same right')
   for (; right + left + 1 < minChildLen; right++) {
     const oldChild = oldChildren[oldChildLen - right - 1]
     const newChild = newChildren[newChildLen - right - 1]
@@ -37,42 +251,32 @@ export const patchDocumentNode = (schema, oldNode, newNode) => {
     finalRightChildren.unshift(...ensureArray(oldChild))
   }
 
-  console.log(`==> eq left:${left}, right:${right}`, [...finalLeftChildren], [...finalRightChildren])
-
   const diffOldChildren = oldChildren.slice(left, oldChildLen - right)
   const diffNewChildren = newChildren.slice(left, newChildLen - right)
-  console.log('==> diff children', diffOldChildren.length, diffNewChildren.length)
   if (diffOldChildren.length && diffNewChildren.length) {
     const matchedNodes = matchNodes(schema, diffOldChildren, diffNewChildren).sort((a, b) => b.count - a.count)
     const bestMatch = matchedNodes[0]
     if (bestMatch) {
-      console.log('==> bestMatch', bestMatch)
       const {oldStartIndex, newStartIndex, oldEndIndex, newEndIndex} = bestMatch
       const oldBeforeMatchChildren = diffOldChildren.slice(0, oldStartIndex)
       const newBeforeMatchChildren = diffNewChildren.slice(0, newStartIndex)
-      console.log('==> before match', oldBeforeMatchChildren.length, newBeforeMatchChildren.length, oldBeforeMatchChildren, newBeforeMatchChildren)
-      finalLeftChildren.push(...patchRemainNodes(schema, oldBeforeMatchChildren, newBeforeMatchChildren))
+      finalLeftChildren.push(...patchRemainNodes(schema, oldBeforeMatchChildren, newBeforeMatchChildren, options))
       finalLeftChildren.push(...diffOldChildren.slice(oldStartIndex, oldEndIndex))
-      console.log('==> match', oldEndIndex - oldStartIndex)
 
       const oldAfterMatchChildren = diffOldChildren.slice(oldEndIndex)
       const newAfterMatchChildren = diffNewChildren.slice(newEndIndex)
-      console.log('==> after match', oldAfterMatchChildren.length, newAfterMatchChildren.length)
-      finalRightChildren.unshift(...patchRemainNodes(schema, oldAfterMatchChildren, newAfterMatchChildren))
+      finalRightChildren.unshift(...patchRemainNodes(schema, oldAfterMatchChildren, newAfterMatchChildren, options))
     } else {
-      console.log('==> no best match found')
-      finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren))
+      finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren, options))
     }
-    console.log('==> matchedNodes', matchedNodes)
   } else {
-    finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren))
+    finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren, options))
   }
 
   return createNewNode(oldNode, [...finalLeftChildren, ...finalRightChildren])
 }
 
 const matchNodes = (schema, oldChildren, newChildren) => {
-  console.log('==> matchNodes', oldChildren, newChildren)
   const matches = []
   for (let oldStartIndex = 0; oldStartIndex < oldChildren.length; oldStartIndex++) {
     const oldStartNode = oldChildren[oldStartIndex]
@@ -87,7 +291,6 @@ const matchNodes = (schema, oldChildren, newChildren) => {
           break
         }
       }
-      console.log('==> match', oldStartIndex, oldEndIndex, newStartIndex, newEndIndex)
       matches.push({oldStartIndex, newStartIndex, oldEndIndex, newEndIndex, count: newEndIndex - newStartIndex})
     }
   }
@@ -103,7 +306,8 @@ const findMatchNode = (children, node, startIndex = 0) => {
   return -1
 }
 
-const patchRemainNodes = (schema, oldChildren, newChildren) => {
+const patchRemainNodes = (schema, oldChildren, newChildren, options = {}) => {
+  const level = getDiffLevel(options)
   const finalLeftChildren = []
     const finalRightChildren = []
   const oldChildLen = oldChildren.length
@@ -118,7 +322,7 @@ const patchRemainNodes = (schema, oldChildren, newChildren) => {
     let updateLeft = !isTextNode(leftOldNode) && matchNodeType(leftOldNode, leftNewNode)
     let updateRight = !isTextNode(rightOldNode) && matchNodeType(rightOldNode, rightNewNode)
     if (Array.isArray(leftOldNode) && Array.isArray(leftNewNode)) {
-      finalLeftChildren.push(...patchTextNodes(schema, leftOldNode, leftNewNode))
+      finalLeftChildren.push(...patchTextNodes(schema, leftOldNode, leftNewNode, options))
       left += 1
       continue
     }
@@ -133,15 +337,15 @@ const patchRemainNodes = (schema, oldChildren, newChildren) => {
       }
     }
     if (updateLeft) {
-      finalLeftChildren.push(patchDocumentNode(schema, leftOldNode, leftNewNode))
+      finalLeftChildren.push(patchDocumentNode(schema, leftOldNode, leftNewNode, options))
       left += 1
     } else if (updateRight) {
-      finalRightChildren.unshift(patchDocumentNode(schema, rightOldNode, rightNewNode))
+      finalRightChildren.unshift(patchDocumentNode(schema, rightOldNode, rightNewNode, options))
       right += 1
     } else {
       // todo
-      finalLeftChildren.push(createDiffNode(schema, leftOldNode, DiffType.Deleted))
-      finalLeftChildren.push(createDiffNode(schema, leftNewNode, DiffType.Inserted))
+      finalLeftChildren.push(createDiffNode(schema, leftOldNode, DiffType.Deleted, level))
+      finalLeftChildren.push(createDiffNode(schema, leftNewNode, DiffType.Inserted, level))
       left += 1
       // delete and insert
     }
@@ -150,26 +354,30 @@ const patchRemainNodes = (schema, oldChildren, newChildren) => {
   const deleteNodeLen = oldChildLen - left - right
   const insertNodeLen = newChildLen - left - right
   if (deleteNodeLen) {
-    finalLeftChildren.push(...oldChildren.slice(left, left + deleteNodeLen).flat().map(node => createDiffNode(schema, node, DiffType.Deleted)))
+    finalLeftChildren.push(...oldChildren.slice(left, left + deleteNodeLen).flat().map(node => createDiffNode(schema, node, DiffType.Deleted, level)))
   }
 
   if (insertNodeLen) {
-    finalRightChildren.unshift(...newChildren.slice(left, left + insertNodeLen).flat().map(node => createDiffNode(schema, node, DiffType.Inserted)))
+    finalRightChildren.unshift(...newChildren.slice(left, left + insertNodeLen).flat().map(node => createDiffNode(schema, node, DiffType.Inserted, level)))
   }
 
   return [...finalLeftChildren, ...finalRightChildren]
 }
 
-export const patchTextNodes = (schema, oldNode, newNode) => {
-  const dmp = new diff_match_patch()
+export const patchTextNodes = (schema, oldNode, newNode, options = {}) => {
+  const level = getDiffLevel(options)
   const oldText = oldNode.map(n => getNodeText(n)).join('')
   const newText = newNode.map(n => getNodeText(n)).join('')
-  const diff = dmp.diff_main(oldText, newText)
+  const diff = level === 'word'
+    ? diffWordsWithDetail(oldText, newText)
+    : new diff_match_patch().diff_main(oldText, newText)
   let oldLen = 0
   let newLen = 0
   const res = diff.map(d => {
-    const [type, content] = [d[0], d[1]]
-    const node = createTextNode(schema, content, type !== DiffType.Unchanged ? createDiffMark(schema, type) : [])
+    const type = Array.isArray(d) ? d[0] : d.type
+    const content = Array.isArray(d) ? d[1] : d.text
+    const segmentLevel = Array.isArray(d) ? 'char' : d.level
+    const node = createTextNode(schema, content, type !== DiffType.Unchanged ? createDiffMark(schema, type, segmentLevel) : [])
     const oldFrom = oldLen
     const oldTo = oldFrom + (type === DiffType.Inserted ? 0 : content.length)
     const newFrom = newLen
@@ -336,10 +544,10 @@ export const createNewNode = (oldNode, children) => {
   }
   return new Node(oldNode.type, oldNode.attrs, Fragment.fromArray(children), oldNode.marks)
 }
-export const createDiffNode = (schema, node, type) => {
+export const createDiffNode = (schema, node, type, level = 'char') => {
   return mapDocumentNode(node, node => {
     if (isTextNode(node)) {
-      return createTextNode(schema, getNodeText(node), [...(node.marks || []), createDiffMark(schema, type)])
+      return createTextNode(schema, getNodeText(node), [...(node.marks || []), createDiffMark(schema, type, level)])
     }
     return node
   })
@@ -354,12 +562,9 @@ function mapDocumentNode (node, mapper) {
   )
   return mapper(copy) || copy
 }
-export const createDiffMark = (schema, type) => {
-  if (type === DiffType.Inserted) {
-    return schema.mark('diffMark', { type })
-  }
-  if (type === DiffType.Deleted) {
-    return schema.mark('diffMark', { type })
+export const createDiffMark = (schema, type, level = 'char') => {
+  if (type === DiffType.Inserted || type === DiffType.Deleted) {
+    return schema.mark('diffMark', {type, level})
   }
   throw new Error('type is not valid')
 }
@@ -367,10 +572,11 @@ export const createTextNode = (schema, content, marks = []) => {
   return schema.text(content, marks)
 }
 
-export const diffEditor = (schema, oldDoc, newDoc) => {
+export const diffEditor = (schema, oldDoc, newDoc, options = {}) => {
+  getDiffLevel(options)
   const oldNode = Node.fromJSON(schema, oldDoc)
   const newNode = Node.fromJSON(schema, newDoc)
-  return patchDocumentNode(schema, oldNode, newNode)
+  return patchDocumentNode(schema, oldNode, newNode, options)
 }
 
 // 最终目的：给老的文档添加 mark 标记删除和新增。

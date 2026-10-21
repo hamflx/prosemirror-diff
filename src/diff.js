@@ -343,9 +343,10 @@ const patchRemainNodes = (schema, oldChildren, newChildren, options = {}) => {
       finalRightChildren.unshift(patchDocumentNode(schema, rightOldNode, rightNewNode, options))
       right += 1
     } else {
-      // todo
-      finalLeftChildren.push(createDiffNode(schema, leftOldNode, DiffType.Deleted, level))
-      finalLeftChildren.push(createDiffNode(schema, leftNewNode, DiffType.Inserted, level))
+      // Normalized text runs are arrays, while inline leaves are single nodes.
+      // Expand either side before recursively marking a structural replacement.
+      finalLeftChildren.push(...ensureArray(leftOldNode).map(node => createDiffNode(schema, node, DiffType.Deleted, level)))
+      finalLeftChildren.push(...ensureArray(leftNewNode).map(node => createDiffNode(schema, node, DiffType.Inserted, level)))
       left += 1
       // delete and insert
     }

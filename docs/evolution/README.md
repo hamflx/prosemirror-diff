@@ -1,13 +1,11 @@
 # Ten-day engineering investigation
 
-Window: 2026-10-21 through 2026-10-30. Any Codex for Open Source application
-is deferred until 2026-10-31; no application is part of this PR.
+Research window: 2026-10-21 through 2026-10-30.
 
 This is an evidence log, not a commit quota. Each subsequent round should record
 the base commit, reproduction, alternatives, validation, limitations and next
 decision. Keep a round research-only when no reliable change is justified.
-Merge requires independent review. Do not change licensing or publish packages
-as part of this investigation.
+Changes require independent review before merging.
 
 | Date | Status / provisional investigation |
 | --- | --- |

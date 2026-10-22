@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metadata review · ProseMirror Diff</title>
+</head>
+<body>
+  <main>
+    <header><p class="eyebrow">PROSEMIRROR DIFF / READ-ONLY EXAMPLE</p>
+      <h1>Same words. Different meaning.</h1>
+      <p>Inspect formatting, link targets and image attributes without combining the two documents.</p>
+    </header>
+    <section class="controls" aria-label="Comparison controls">
+      <label for="scenario">Example</label><select id="scenario"></select>
+      <button id="previous" type="button">Previous change</button>
+      <button id="next" type="button">Next change</button>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+    <p class="scope"><strong>Metadata only.</strong> Both documents must have identical text and structure.
+      Text or structural edits are rejected. Positions use ProseMirror UTF-16 offsets, not visual character counts.
+      These fixed examples are not a general document renderer or an accept/reject editor.</p>
+    <p id="error" role="alert" hidden></p>
+    <div class="documents">
+      <section aria-labelledby="before-title"><h2 id="before-title">Before</h2><div id="before" class="document"></div></section>
+      <section aria-labelledby="after-title"><h2 id="after-title">After</h2><div id="after" class="document"></div></section>
+    </div>
+    <section aria-labelledby="changes-title"><h2 id="changes-title">Changes</h2>
+      <p>Select a change to locate its range on both sides. Demo links are read-only.</p>
+      <ol id="changes"></ol>
+    </section>
+  </main>
+  <script type="module" src="/src/metadata-demo.js"></script>
+</body>
+</html>

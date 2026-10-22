@@ -126,6 +126,20 @@ limitations are unchanged.
 
 ## Development
 
+### Read-only metadata review example
+
+From the repository root, run `npm ci` then `npm run demo:metadata` and open
+`http://127.0.0.1:5173/metadata.html`. Use `npm run build:metadata-demo` to build
+the static example into `example/dist/metadata` (serve that directory over HTTP).
+The Vite development tools require Node 20.19+ or 22.12+.
+
+The example uses this checkout's source API and fixed fixtures for bold, link
+targets and image attributes. Select a change, or use Previous/Next, to highlight
+its exact range in both read-only documents. It also demonstrates an empty
+result and rejection of a text edit. It does not accept arbitrary input, map
+structural edits, or implement accept/reject. Its renderer only supports its
+small fixture schema. The existing Vue editor example remains separate.
+
 ```sh
 npm ci
 npm test

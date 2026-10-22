@@ -10,7 +10,7 @@ Changes require independent review before merging.
 | Date | Status / provisional investigation |
 | --- | --- |
 | Oct 21 | Completed: [text-run/inline-leaf crash](2026-10-21.md) |
-| Oct 22 | Completed: [public node-copy API and type audit](2026-10-22.md); candidate: [grapheme comparison and feature priorities](2026-10-22-grapheme.md) |
+| Oct 22 | Completed: [public node-copy API](2026-10-22.md), [grapheme comparison](2026-10-22-grapheme.md); candidate: [structured metadata comparison](2026-10-22-metadata.md) |
 | Oct 23 | Pending: marks/attribute-only changes and reconstruction expectations |
 | Oct 24 | Pending: Unicode boundaries in default char mode versus word mode |
 | Oct 25 | Pending: empty documents, leaf nodes and nested schema validity |

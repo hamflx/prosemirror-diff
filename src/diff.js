@@ -143,20 +143,34 @@ const changeType = change => change.added
     ? DiffType.Deleted
     : DiffType.Unchanged
 
-const diffReplacement = (oldText, newText, deadline) => {
+const diffReplacement = (oldText, newText, deadline, level = 'char', fallbackLevel = 'word') => {
   const oldGraphemes = tokenizeGraphemes(oldText)
   const newGraphemes = tokenizeGraphemes(newText)
   const changes = Date.now() < deadline
     ? diffArrays(oldGraphemes, newGraphemes, createDiffOptions(deadline))
     : undefined
   if (!changes) {
-    return boundaryFallback(oldGraphemes, newGraphemes, 'word', 'char')
+    return boundaryFallback(oldGraphemes, newGraphemes, fallbackLevel, level)
   }
   return mergeDiffSegments(changes.map(change => ({
     type: changeType(change),
     text: changeText(change),
-    level: 'char'
+    level
   })))
+}
+
+/**
+ * Diffs text directly at extended grapheme boundaries, without word alignment.
+ * Result text is preserved exactly; no Unicode normalization is applied.
+ */
+export const diffGraphemes = (oldText, newText) => {
+  if (typeof oldText !== 'string' || typeof newText !== 'string') {
+    throw new TypeError('oldText and newText must be strings')
+  }
+  if (!oldText && !newText) {
+    return []
+  }
+  return diffReplacement(oldText, newText, Date.now() + DIFF_TIMEOUT_MS, 'grapheme', 'grapheme')
 }
 
 /**
@@ -211,8 +225,8 @@ export const diffWordsWithDetail = (oldText, newText) => {
 
 const getDiffLevel = options => {
   const level = options?.level ?? 'char'
-  if (level !== 'char' && level !== 'word') {
-    throw new RangeError("options.level must be either 'char' or 'word'")
+  if (level !== 'char' && level !== 'word' && level !== 'grapheme') {
+    throw new RangeError("options.level must be 'char', 'word', or 'grapheme'")
   }
   return level
 }
@@ -371,7 +385,9 @@ export const patchTextNodes = (schema, oldNode, newNode, options = {}) => {
   const newText = newNode.map(n => getNodeText(n)).join('')
   const diff = level === 'word'
     ? diffWordsWithDetail(oldText, newText)
-    : new diff_match_patch().diff_main(oldText, newText)
+    : level === 'grapheme'
+      ? diffGraphemes(oldText, newText)
+      : new diff_match_patch().diff_main(oldText, newText)
   let oldLen = 0
   let newLen = 0
   const res = diff.map(d => {

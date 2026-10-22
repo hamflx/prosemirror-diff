@@ -24,12 +24,15 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "core-js": "^3.49.0",
     "rollup": "^4.62.3",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "vite": "^7.3.6"
   },
   "scripts": {
     "build": "rollup -c rollup.config.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "demo:metadata": "vite --config example/vite.metadata.config.mjs --host 127.0.0.1",
+    "build:metadata-demo": "vite build --config example/vite.metadata.config.mjs"
   },
   "repository": {
     "type": "git",

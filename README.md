@@ -72,6 +72,58 @@ opting in. The default remains the legacy UTF-16 character algorithm.
   that split even though its diff segments cover complete graphemes. Structural
   nodes and inline leaves retain the existing document-diff limitations.
 
+## Compare formatting and attributes without a mixed document
+
+`compareDocumentMetadata(oldDoc, newDoc)` reports **metadata-only revisions**
+as detached data. Pass valid ProseMirror document Nodes from the same schema
+instance; JSON snapshots can be loaded with `Node.fromJSON(schema, json)`.
+It needs no editor, DOM, or `diffMark` definition and does not change either
+document or the behavior of `diffEditor`.
+
+```js
+import {Node} from 'prosemirror-model'
+import {compareDocumentMetadata} from '@hamflx/prosemirror-diff'
+
+const changes = compareDocumentMetadata(
+  Node.fromJSON(schema, oldJSON),
+  Node.fromJSON(schema, newJSON)
+)
+// A bold mark added to the first paragraph's "abc":
+// [{kind: 'marks', nodeType: 'text',
+//   oldFrom: 1, oldTo: 4, newFrom: 1, newTo: 4,
+//   before: [], after: [{type: 'strong'}]}]
+```
+
+Records have `kind: 'attrs' | 'marks'`, `nodeType`, half-open `oldFrom`/`oldTo`
+and `newFrom`/`newTo`, and detached `before`/`after` snapshots. Attr records
+contain the entire attribute object; mark records contain arrays of mark JSON
+(including link attributes). Image/leaf attributes, block attributes and
+document attributes are included. Traversal order is parent before children,
+attrs before marks at a node, and text order within a run.
+
+Positions use ProseMirror's UTF-16 indexing. Non-text nodes span their full
+node size; document-root metadata spans `[0, doc.content.size)`, which can be
+empty. Text mark ranges follow the union of old/new formatting boundaries,
+so differently split text nodes are supported without heuristic alignment.
+Ranges can overlap (for example, paragraph attrs and a child's marks).
+The two sides' ranges are equal for this restricted metadata-only contract;
+they are explicit to let consumers address both original documents.
+
+**Scope:** node types/order and exact text must match after joining adjacent
+text nodes. Text edits, insertions/deletions, or changed non-text structure
+throw `RangeError`, rather than returning a partial comparison. The API pairs
+repeated blocks by position; identical-content blocks with swapped metadata
+are reported as metadata edits, not detected moves. This is not a full
+structural diff, position mapping, patch, or accept/reject engine. Both inputs
+are schema-checked. Different schema instances, non-document inputs, or cyclic
+or non-plain metadata throw `TypeError` (invalid schema content fails validation).
+Snapshots support plain objects, arrays, strings, booleans, finite numbers,
+null and undefined; they do not invoke custom serializers.
+
+Consumers can use the records in side-by-side views or change lists while
+keeping strict schemas intact. Existing `diffEditor` output and its structural
+limitations are unchanged.
+
 ## Development
 
 ```sh

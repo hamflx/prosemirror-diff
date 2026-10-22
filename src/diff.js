@@ -539,11 +539,15 @@ export const getNodeChildren = node => node.content?.content ?? []
 export const getNodeText = node => node.text
 export const isTextNode = node => node.type?.name === 'text'
 export const matchNodeType = (node1, node2) => node1.type?.name === node2.type?.name || (Array.isArray(node1) && Array.isArray(node2))
+/**
+ * @param {Node} oldNode
+ * @param {Node[]} children
+ */
 export const createNewNode = (oldNode, children) => {
   if (!oldNode.type) {
     throw new Error('oldNode.type is undefined')
   }
-  return new Node(oldNode.type, oldNode.attrs, Fragment.fromArray(children), oldNode.marks)
+  return oldNode.copy(Fragment.fromArray(children))
 }
 export const createDiffNode = (schema, node, type, level = 'char') => {
   return mapDocumentNode(node, node => {

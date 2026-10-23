@@ -28,7 +28,7 @@ afterEach(() => {
 
 describe('block review DOM integration', () => {
   it('locates insertion content and an explicit empty old range', () => {
-    expect(byId('scenario').options).toHaveLength(9)
+    expect(byId('scenario').options).toHaveLength(15)
     expect(byId('changes').children).toHaveLength(1)
     expect(markers('before')).toHaveLength(1)
     expect(markers('before')[0].textContent).toContain('Insertion point at 9')
@@ -59,8 +59,8 @@ describe('block review DOM integration', () => {
     choose('scenario', 'strict-container')
     expect(byId('before').querySelector('.strict-container h3').textContent).toBe('Same title')
     expect(byId('after').querySelector('.strict-container p').textContent).toBe('Same title')
-    expect(byId('before').querySelectorAll('.strict-container > h3, .strict-container > p')).toHaveLength(1)
-    expect(byId('after').querySelectorAll('.strict-container > h3, .strict-container > p')).toHaveLength(1)
+    expect(byId('before').querySelectorAll('.strict-container > .child-content > .block')).toHaveLength(1)
+    expect(byId('after').querySelectorAll('.strict-container > .child-content > .block')).toHaveLength(1)
   })
   it('navigates repeated-block changes and clears previous range markers', () => {
     choose('scenario', 'repeated')

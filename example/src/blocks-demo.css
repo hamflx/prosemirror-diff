@@ -13,6 +13,13 @@
 .position-marker { padding: 10px; border: 2px dashed #99600c; background: #fff0c5; font-size: 13px; }
 .strict-container { padding: 12px; border-left: 3px solid #607969; background: #f3f5f2; }
 .strict-container > span { display: block; font-size: 12px; margin-bottom: 8px; }
+.nested-container { padding: 10px; border-left: 3px solid #82968a; }
+.nested-container > span { display: block; font-size: 12px; }
+.child-content > .block { margin: 10px 0; }
+.detail-list { margin: 16px 0 0 12px; padding-left: 12px; border-left: 2px solid #c9d4cd; }
+.detail-list > li { padding: 12px; }
+.detail-status { font: inherit; font-size: 13px; color: #53675d; }
+.detail-status.limited { padding: 8px; color: #714300; background: #fff0dc; }
 #scenario-note { color: #53675d; }
 footer { font-size: 13px; margin-top: 32px; color: #53675d; }
 

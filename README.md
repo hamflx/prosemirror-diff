@@ -252,6 +252,20 @@ changes or use Previous/Next to locate changed blocks on both sides. An empty
 counterpart range has a visible insertion/deletion point, including position
 zero in an empty document. Block labels expose exact half-open ranges.
 
+Detail depth defaults to 0, retaining the top-level list. Select 1 or 2 to
+inspect child blocks or grandchildren. Parent events remain in the hierarchical
+list; Previous/Next follows its displayed order. Selecting a child highlights
+only its absolute range within the correct container, including empty ranges.
+These are informational details: do not apply both parent and child as edits.
+
+Nested fixtures cover strict containers, repeated children, empty containers
+and depth limits. The shared-budget fixture uses 20 cells to demonstrate a
+local fallback in the second sibling while root alignment succeeds; 24 cells
+allows both child comparisons. The summary counts descendant fallback and
+depth limits, with per-layer explanations in the list. Empty truncated details
+do not imply equal contents. No fallback means the matrix budget sufficed,
+not proof of node identity or a finest-grained text comparison.
+
 Fixtures cover paragraphs, empty blocks, image attributes, a strict single-child
 container and repeated blocks. The budget example switches between default
 alignment and zero cells; a coarse fallback is explicitly labelled and can

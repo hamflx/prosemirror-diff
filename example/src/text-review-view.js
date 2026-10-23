@@ -6,8 +6,10 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
   const byId = id => document.getElementById(id)
   const list = byId('text-changes'), status = byId('text-status')
   const previous = byId('text-previous'), next = byId('text-next')
+  const previousPage = byId('text-page-previous'), nextPage = byId('text-page-next')
+  const pageStatus = byId('text-page-status'), pageSize = 50
   const cache = new Map()
-  let review, selected = -1, originals = [], buttons = []
+  let review, selected = -1, originals = [], buttons = [], page = -1
   let worker, requestId = 0, disposed = false
 
   function stopWorker() {
@@ -28,7 +30,8 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
   function activate(index, scroll = false) {
     restore()
     selected = index >= 0 && index < (review?.hunks.length ?? 0) ? index : -1
-    buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === selected)))
+    if (selected >= 0) renderPage(selected)
+    buttons.forEach(({button, index}) => button.setAttribute('aria-pressed', String(index === selected)))
     previous.disabled = selected <= 0
     next.disabled = selected < 0 || selected >= review.hunks.length - 1
     if (selected < 0) return
@@ -52,6 +55,44 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
 
   previous.onclick = () => activate(selected - 1, true)
   next.onclick = () => activate(selected + 1, true)
+  previousPage.onclick = () => { if (page > 0) activate((page - 1) * pageSize, true) }
+  nextPage.onclick = () => {
+    if (review && (page + 1) * pageSize < review.hunks.length) activate((page + 1) * pageSize, true)
+  }
+
+  function resetList() {
+    buttons = []
+    page = -1
+    list.replaceChildren()
+    list.start = 1
+    previousPage.disabled = nextPage.disabled = true
+    pageStatus.textContent = 'No text detail page'
+  }
+
+  function renderPage(index) {
+    const newPage = Math.floor(index / pageSize)
+    if (newPage === page) return
+    page = newPage
+    buttons = []
+    const start = page * pageSize, end = Math.min(start + pageSize, review.hunks.length)
+    const fragment = document.createDocumentFragment()
+    for (let i = start; i < end; i++) {
+      const hunk = review.hunks[i]
+      const item = element('li')
+      item.value = i + 1
+      const button = element('button', `${i + 1}. ${hunk.kind}: Before [${hunk.oldFrom}, ${hunk.oldTo}), After [${hunk.newFrom}, ${hunk.newTo})`)
+      button.type = 'button'
+      button.addEventListener('click', () => activate(i, true))
+      buttons.push({button, index: i})
+      item.append(button)
+      fragment.append(item)
+    }
+    list.start = start + 1
+    list.replaceChildren(fragment)
+    previousPage.disabled = page === 0
+    nextPage.disabled = end === review.hunks.length
+    pageStatus.textContent = `Showing ${start + 1}-${end} of ${review.hunks.length} text details. Page ${page + 1} of ${Math.ceil(review.hunks.length / pageSize)}. All details are retained.`
+  }
 
   return {
     dispose() {
@@ -60,9 +101,9 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
       stopWorker()
       restore()
       originals = []
-      buttons = []
+      resetList()
       review = undefined
-      list.replaceChildren()
+      selected = -1
       previous.disabled = next.disabled = true
       status.dataset.state = 'idle'
       status.textContent = 'No selected block event'
@@ -73,10 +114,9 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
       stopWorker()
       restore()
       originals = []
-      buttons = []
+      resetList()
       review = undefined
       selected = -1
-      list.replaceChildren()
       previous.disabled = next.disabled = true
       byId('text-owner').textContent = entry ? `Selected block event ${entry.label}` : 'No selected block event'
       const prepared = prepareTextChange(entry?.change)
@@ -91,16 +131,8 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
           const target = views[side].targets.find(target => target.scope === entry.scopes[side] && target.from === entry.change[`${side}From`])
           originals.push({target: target.source, text: review[`${side}Text`], side})
         }
-        review.hunks.forEach((hunk, index) => {
-          const item = element('li')
-          const button = element('button', `${index + 1}. ${hunk.kind}: Before [${hunk.oldFrom}, ${hunk.oldTo}), After [${hunk.newFrom}, ${hunk.newTo})`)
-          button.type = 'button'
-          button.addEventListener('click', () => activate(index, true))
-          buttons.push(button)
-          item.append(button)
-          list.append(item)
-        })
         status.textContent = 'No text changes in the selected block.'
+        if (!review.hunks.length) pageStatus.textContent = 'Showing 0 of 0 text details. Page 0 of 0.'
         activate(review.hunks.length ? 0 : -1)
         status.dataset.state = 'ready'
       }

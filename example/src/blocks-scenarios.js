@@ -68,6 +68,9 @@ export const scenarios = [
   scenario('text-inline-atom', 'Unsupported inline atom', 'The inline token changes while textContent is equal. Text details explicitly reject this case.',
     [schema.node('paragraph', null, [schema.text('Same words'), schema.node('inline_token', {label: 'old token'})])],
     [schema.node('paragraph', null, [schema.text('Same words'), schema.node('inline_token', {label: 'new token'})])]),
+  scenario('text-many', 'Review many separated text edits', 'This input has 600 separated replacements. The text algorithm may return coarser details under its deadline; the list reports the actual result total. All returned details remain available in pages of 50.',
+    [p(Array.from({length: 600}, (_, i) => `a${i} `).join(''))],
+    [p(Array.from({length: 600}, (_, i) => `b${i} `).join(''))]),
   scenario('unchanged', 'Identical documents', 'No block changes: there are no selected ranges or active navigation controls.',
     [p('Unchanged'), image(false)], [p('Unchanged'), image(false)])
 ]

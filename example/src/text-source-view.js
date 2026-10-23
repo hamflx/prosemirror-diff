@@ -107,19 +107,67 @@ export function renderTextSource(target, node, range) {
   return first
 }
 
-export function renderMarkDescriptions(node, from) {
-  const descriptions = document.createElement('ul')
-  descriptions.className = 'mark-descriptions'
+export function renderMarkDescriptions(node, from, label = node.type.name + ' at ' + from) {
+  const records = []
   node.forEach((child, offset) => {
     for (const mark of child.marks) {
       if (mark.type.name !== 'link' && supportedTextMark(mark)) continue
-      const item = document.createElement('li')
-      const scope = `[${from + 1 + offset}, ${from + 1 + offset + child.nodeSize})`
-      item.textContent = supportedTextMark(mark)
-        ? `Link ${scope}: href ${JSON.stringify(mark.attrs.href)}; title ${JSON.stringify(mark.attrs.title ?? null)}. Display only; no navigation.`
-        : `Unsupported mark ${mark.type.name} ${scope}: text is shown, but its formatting is not interpreted.`
-      descriptions.append(item)
+      records.push({mark, from: from + 1 + offset, to: from + 1 + offset + child.nodeSize})
     }
   })
-  return descriptions
+  const list = document.createElement('ul')
+  list.className = 'mark-descriptions'
+  function row({mark, from, to}) {
+    const item = document.createElement('li')
+    const scope = '[' + from + ', ' + to + ')'
+    item.textContent = supportedTextMark(mark)
+      ? 'Link ' + scope + ': href ' + JSON.stringify(mark.attrs.href) + '; title ' + JSON.stringify(mark.attrs.title ?? null) + '. Display only; no navigation.'
+      : 'Unsupported mark ' + mark.type.name + ' ' + scope + ': text is shown, but its formatting is not interpreted.'
+    return item
+  }
+  if (records.length <= 50) {
+    list.append(...records.map(row))
+    return list
+  }
+  const group = document.createElement('div')
+  group.className = 'mark-descriptions mark-description-pages'
+  list.className = 'mark-description-list'
+  group.setAttribute('role', 'group')
+  group.setAttribute('aria-label', 'Mark descriptions for ' + label)
+  const unsupported = records.filter(record => !supportedTextMark(record.mark))
+  if (unsupported.length) {
+    const warning = document.createElement('p')
+    warning.className = 'mark-description-warning'
+    const names = [...new Set(unsupported.map(record => record.mark.type.name))].join(', ')
+    warning.textContent = unsupported.length + ' unsupported mark records (' + names + '). Their formatting is not interpreted; all records remain available across the pages.'
+    group.append(warning)
+  }
+  const status = document.createElement('p')
+  status.className = 'mark-description-status'
+  status.setAttribute('aria-live', 'polite')
+  status.setAttribute('aria-atomic', 'true')
+  const controls = document.createElement('div')
+  controls.className = 'mark-description-controls'
+  const previous = document.createElement('button'), next = document.createElement('button')
+  previous.type = next.type = 'button'
+  previous.textContent = 'Previous descriptions'
+  next.textContent = 'Next descriptions'
+  previous.setAttribute('aria-label', 'Previous mark descriptions for ' + label)
+  next.setAttribute('aria-label', 'Next mark descriptions for ' + label)
+  let page = 0
+  function show() {
+    const start = page * 50, end = Math.min(start + 50, records.length)
+    list.replaceChildren(...records.slice(start, end).map(row))
+    status.textContent = 'Showing ' + (start + 1) + '-' + end + ' of ' + records.length + ' mark descriptions. Page ' + (page + 1) + ' of ' + Math.ceil(records.length / 50) + '. All records are retained.'
+    previous.disabled = page === 0
+    next.disabled = end === records.length
+    if (document.activeElement === next && next.disabled) previous.focus()
+    if (document.activeElement === previous && previous.disabled) next.focus()
+  }
+  previous.onclick = () => { if (page > 0) { page--; show() } }
+  next.onclick = () => { if ((page + 1) * 50 < records.length) { page++; show() } }
+  controls.append(previous, next)
+  group.append(status, controls, list)
+  show()
+  return group
 }

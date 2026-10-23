@@ -11,7 +11,7 @@ const byId=id=>document.getElementById(id),source=byId('source'),attributes=byId
 for(const f of fixtures)byId('fixture').add(new Option(f.name,f.name))
 const tasks=[],supported=PerformanceObserver.supportedEntryTypes.includes('longtask')
 if(supported)new PerformanceObserver(list=>tasks.push(...list.getEntries().map(x=>({start:x.startTime,duration:x.duration})))).observe({type:'longtask',buffered:true})
-const environment={userAgent:navigator.userAgent,longTaskSupported:supported,revision:'5af0d874c27c62f7005cdda980a06e537f15576f',scope:'actual renderer only; one side; production bundle',throttling:'No throttling configured by page; external DevTools configuration not observable'}
+const environment={userAgent:navigator.userAgent,longTaskSupported:supported,revision:'c9083affa918a1c9e0f5b531f6c9194d9586d597',scope:'actual renderer only; one side; production bundle',throttling:'No throttling configured by page; external DevTools configuration not observable'}
 byId('environment').textContent=JSON.stringify(environment)
 const observations=[];window.densityResult={environment,observations}
 const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve)),delay=ms=>new Promise(resolve=>setTimeout(resolve,ms))

@@ -63,7 +63,7 @@ export function renderDocument(doc, panel) {
           block.append(element('span', 'Empty paragraph'))
         }
         block.append(text)
-        const descriptions = renderMarkDescriptions(node, from)
+        const descriptions = renderMarkDescriptions(node, from, (panel.id || 'Document') + ' ' + node.type.name + ' [' + from + ', ' + to + ')')
         if (descriptions.childNodes.length) block.append(descriptions)
       }
       destination.append(block)

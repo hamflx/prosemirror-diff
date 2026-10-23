@@ -355,6 +355,13 @@ validation and range lookup still scan the original runs, and initial rendering,
 large highlights and visible attribute descriptions can remain expensive. See the
 [incremental highlight investigation](docs/evolution/2026-10-23-incremental-text-highlights.md).
 
+Long mark-description lists retain every original range and attribute snapshot in
+pages of 50; short lists remain simple lists. Each document block has independent
+Previous/Next controls and explicit counts. Unknown-format warnings remain visible
+on every page, and link attributes remain literal non-navigation text. Use the
+**Browse many link descriptions** fixture; see the
+[description pagination record](docs/evolution/2026-10-23-mark-description-pages.md).
+
 ### Read-only metadata review example
 
 The **Caller-selected paragraph** fixture retains two complete documents with

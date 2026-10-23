@@ -2,13 +2,14 @@ import {Schema} from 'prosemirror-model'
 
 export const schema = new Schema({nodes: {
   doc: {content: 'block*'},
-  paragraph: {group: 'block', content: 'text*'},
-  heading: {group: 'block', content: 'text*'},
+  paragraph: {group: 'block', content: 'inline*'},
+  heading: {group: 'block', content: 'inline*'},
   container: {group: 'block', content: 'block'},
   section: {group: 'block', content: 'block*'},
   image: {group: 'block', attrs: {src: {}, alt: {default: ''}}},
-  text: {}
-}})
+  inline_token: {inline: true, group: 'inline', atom: true, attrs: {label: {}}},
+  text: {group: 'inline'}
+}, marks: {strong: {}}})
 const p = value => schema.node('paragraph', null, value ? schema.text(value) : null)
 const doc = nodes => schema.node('doc', null, nodes)
 const section = nodes => schema.node('section', null, nodes)
@@ -50,6 +51,23 @@ export const scenarios = [
   scenario('shared-budget', 'Share budget across sibling details', 'With depth 1 and 20 cells, root alignment and the first child consume the budget; the second child falls back. At 24 cells neither child falls back.',
     [section([p('A')]), p('Anchor'), section([p('B')])],
     [section([p('X')]), p('Anchor'), section([p('Y')])]),
+  scenario('text-unicode', 'Review Unicode text details', 'A family emoji stays whole; combining and precomposed accents retain their original UTF-16 lengths without normalization.',
+    [p('A 👨‍👩‍👧‍👦 e\u0301 Z')], [p('A 👩‍👩‍👧‍👦 é Z')]),
+  scenario('text-empty', 'Insert text into an empty paragraph', 'The empty old text range is inside the paragraph, not between blocks. The flag occupies four UTF-16 positions.',
+    [p('')], [p('🇨🇦')]),
+  scenario('text-empty-delete', 'Delete all paragraph text', 'The empty new text range stays inside the existing paragraph.',
+    [p('🇨🇦')], [p('')]),
+  scenario('text-boundaries', 'Insert at text boundaries', 'Text navigation locates beginning, middle and end insertions with inline position markers.',
+    [p('AB')], [p('xAyBz')]),
+  scenario('text-nested', 'Review nested Unicode text', 'Select depth 1, then the child event. Text ranges include the container and textblock opening positions.',
+    [section([p('Keep'), p('Hi 👨‍👩‍👧‍👦!')])], [section([p('Keep'), p('Hi 👩‍👩‍👧‍👦!')])]),
+  scenario('text-marks', 'Unsupported marked text', 'The bold-only change remains a block replacement. Plain text refinement must not erase marks.',
+    [p('Same words')], [schema.node('paragraph', null, schema.text('Same words', [schema.mark('strong')]))]),
+  scenario('text-nested-shifted', 'Review different nested offsets', 'At depth 1, the final child text event has different old/new positions because an earlier sibling changed length.',
+    [section([p('a'), p('Anchor'), p('Hi 👨‍👩‍👧‍👦!')])], [section([p('long lead'), p('Anchor'), p('Hi 👩‍👩‍👧‍👦!')])]),
+  scenario('text-inline-atom', 'Unsupported inline atom', 'The inline token changes while textContent is equal. Text details explicitly reject this case.',
+    [schema.node('paragraph', null, [schema.text('Same words'), schema.node('inline_token', {label: 'old token'})])],
+    [schema.node('paragraph', null, [schema.text('Same words'), schema.node('inline_token', {label: 'new token'})])]),
   scenario('unchanged', 'Identical documents', 'No block changes: there are no selected ranges or active navigation controls.',
     [p('Unchanged'), image(false)], [p('Unchanged'), image(false)])
 ]

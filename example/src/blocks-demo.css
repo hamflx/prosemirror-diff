@@ -22,6 +22,11 @@
 .detail-status.limited { padding: 8px; color: #714300; background: #fff0dc; }
 #scenario-note { color: #53675d; }
 footer { font-size: 13px; margin-top: 32px; color: #53675d; }
+.source-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.selected-text-change { background: #ffdf80; outline: 2px solid #8c5600; }
+.text-position-marker { display: inline-block; border-left: 3px dashed #8c5600; height: 1.2em; vertical-align: text-bottom; }
+.inline-token { border: 1px solid #607969; border-radius: 3px; padding: 0 3px; }
+#text-precision { font-size: 14px; color: #53675d; }
 
 @media (max-width: 650px) {
   .controls { align-items: stretch; }

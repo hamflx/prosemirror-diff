@@ -24,4 +24,6 @@ Reorder these topics based on reproduced failures and user reports. No future
 round is marked completed or scheduled by this file. No usage/adoption claims
 are inferred from repository activity.
 
-Candidate: [legacy renderer schema validation](2026-10-23-legacy-schema-validation.md).
+Completed: [legacy renderer schema validation](2026-10-23-legacy-schema-validation.md).
+
+Candidate: [incremental text highlights](2026-10-23-incremental-text-highlights.md).

@@ -15,56 +15,95 @@ function marked(content, marks) {
   return content
 }
 
-// Re-render original runs, splitting only at the requested text range. A grapheme
-// can cross run/mark boundaries; its logical range remains whole in the list.
-// Attribute descriptions live outside this element so source text stays exact.
-export function renderTextSource(target, node, range) {
+// Keep original runs separate from temporary decorations. Reusing the same PM
+// node restores original DOM objects, then changes only intersecting text leaves.
+const sources = new WeakMap()
+
+function initialize(target, node) {
   target.replaceChildren()
-  const from = range ? range.from - range.start : -1
-  const to = range ? range.to - range.start : -1
-  let offset = 0, markerPlaced = false, first
-  const point = position => {
-    if (!range || from !== to || position !== from || markerPlaced) return
+  const state = {node, runs: [], tops: [], undo: []}
+  node.forEach((child, offset) => {
+    let top
+    if (child.isText) {
+      const text = document.createTextNode(child.text)
+      top = marked(text, child.marks)
+      state.runs.push({from: offset, to: offset + child.text.length, child, text, top})
+    } else {
+      top = document.createElement(child.type.name === 'hard_break' ? 'br' : 'span')
+      if (child.type.name !== 'hard_break') {
+        top.className = 'inline-token'
+        top.textContent = '[' + (child.attrs.label ?? child.type.name) + ']'
+      }
+    }
+    state.tops.push(top)
+    target.append(top)
+  })
+  sources.set(target, state)
+  return state
+}
+
+function replaceTemporarily(state, target, original, replacements) {
+  const parent = original.parentNode
+  original.replaceWith(...replacements)
+  state.undo.push(() => {
+    // A caller may have replaced the whole target since the last decoration.
+    if (!target.contains(replacements[0]) || replacements.some((part, i) =>
+      part.parentNode !== parent || (i > 0 && replacements[i - 1].nextSibling !== part))) return
+    parent.insertBefore(original, replacements[0])
+    replacements.forEach(part => part.remove())
+  })
+}
+
+export function renderTextSource(target, node, range) {
+  let state = sources.get(target)
+  if (state?.node === node) {
+    state.undo.reverse().forEach(undo => undo())
+    state.undo = []
+    // Detect caller-cleared/replaced source DOM before reusing cached leaves.
+    if (target.childNodes.length !== state.tops.length ||
+        state.tops.some((top, i) => target.childNodes[i] !== top) ||
+        state.runs.some(run => !target.contains(run.text) || run.text.data !== run.child.text)) state = undefined
+  } else state = undefined
+  if (!state) state = initialize(target, node)
+  if (!range) return
+  const from = range.from - range.start, to = range.to - range.start
+  if (from === to) {
     const marker = document.createElement('span')
     marker.className = 'text-position-marker'
     Object.assign(marker.dataset, {from: String(range.from), to: String(range.to)})
     marker.setAttribute('role', 'img')
     marker.setAttribute('aria-label', range.label)
-    target.append(marker)
-    markerPlaced = true
-    first = marker
-  }
-  node.forEach(child => {
-    if (child.isText) {
-      const end = offset + child.text.length
-      const cuts = [...new Set([offset, end, from, to].filter(p => p >= offset && p <= end))].sort((a, b) => a - b)
-      for (let i = 0; i < cuts.length - 1; i++) {
-        const a = cuts[i], b = cuts[i + 1]
-        point(a)
-        let content = document.createTextNode(child.text.slice(a - offset, b - offset))
-        if (range && from !== to && a >= from && b <= to) {
-          const highlight = document.createElement('span')
-          highlight.className = 'selected-text-change'
-          Object.assign(highlight.dataset, {from: String(range.start + a), to: String(range.start + b)})
-          highlight.append(content)
-          content = highlight
-          first ??= highlight
-        }
-        target.append(marked(content, child.marks))
-      }
-      offset = end
-      point(offset)
+    const run = state.runs.find(run => run.from <= from && from < run.to)
+    if (run && from > run.from) {
+      // Split just this run, placing the point outside its original marks.
+      const split = from - run.from
+      replaceTemporarily(state, target, run.top, [
+        marked(document.createTextNode(run.child.text.slice(0, split)), run.child.marks),
+        marker,
+        marked(document.createTextNode(run.child.text.slice(split)), run.child.marks)
+      ])
     } else {
-      const token = document.createElement(child.type.name === 'hard_break' ? 'br' : 'span')
-      if (child.type.name !== 'hard_break') {
-        token.className = 'inline-token'
-        token.textContent = `[${child.attrs.label ?? child.type.name}]`
-      }
-      target.append(token)
-      offset += child.nodeSize
+      target.insertBefore(marker, run?.top ?? null)
+      state.undo.push(() => marker.remove())
     }
-  })
-  point(offset)
+    return marker
+  }
+  let first
+  for (const run of state.runs) {
+    if (run.to <= from) continue
+    if (run.from >= to) break
+    const a = Math.max(from, run.from), b = Math.min(to, run.to)
+    const highlight = document.createElement('span')
+    highlight.className = 'selected-text-change'
+    Object.assign(highlight.dataset, {from: String(range.start + a), to: String(range.start + b)})
+    highlight.append(document.createTextNode(run.child.text.slice(a - run.from, b - run.from)))
+    const parts = []
+    if (a > run.from) parts.push(document.createTextNode(run.child.text.slice(0, a - run.from)))
+    parts.push(highlight)
+    if (b < run.to) parts.push(document.createTextNode(run.child.text.slice(b - run.from)))
+    replaceTemporarily(state, target, run.text, parts)
+    first ??= highlight
+  }
   return first
 }
 

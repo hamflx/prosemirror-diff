@@ -41,7 +41,7 @@ function render(doc, side, container) {
           const wrapper = element(mark.type.name === 'strong' ? 'strong' : 'a')
           if (mark.type.name === 'link') {
             wrapper.href = mark.attrs.href
-            wrapper.title = mark.attrs.href + ' (demo link; navigation disabled)'
+            wrapper.title = mark.attrs.href + ' (demo link; ordinary click disabled)'
             wrapper.addEventListener('click', event => event.preventDefault())
           }
           wrapper.append(content)

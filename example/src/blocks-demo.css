@@ -1,0 +1,23 @@
+@import './metadata-demo.css';
+
+.controls { align-items: center; }
+#status { font-weight: 650; }
+#precision { padding: 12px 16px; background: #e4eee7; border-radius: 6px; }
+#precision.fallback { background: #fff0dc; border: 1px solid #a55a00; }
+.document { max-height: 34rem; overflow: auto; }
+.block { padding: 12px; border: 1px solid #d8e0da; border-radius: 6px; margin: 12px 0; }
+.block-label { display: block; font-family: monospace; font-size: 12px; color: #53675d; margin-bottom: 10px; }
+.block p { margin: 0; }
+.block h3 { font-size: 21px; margin: 8px 0; }
+.empty-block { font-style: italic; color: #68796d; min-height: 1.5em; }
+.position-marker { padding: 10px; border: 2px dashed #99600c; background: #fff0c5; font-size: 13px; }
+.strict-container { padding: 12px; border-left: 3px solid #607969; background: #f3f5f2; }
+.strict-container > span { display: block; font-size: 12px; margin-bottom: 8px; }
+#scenario-note { color: #53675d; }
+footer { font-size: 13px; margin-top: 32px; color: #53675d; }
+
+@media (max-width: 650px) {
+  .controls { align-items: stretch; }
+  .controls label, .controls select { flex-basis: 100%; }
+  .document { max-height: 28rem; }
+}

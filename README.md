@@ -124,7 +124,46 @@ Consumers can use the records in side-by-side views or change lists while
 keeping strict schemas intact. Existing `diffEditor` output and its structural
 limitations are unchanged.
 
-## Development
+## Top-level block changes
+
+`compareDocumentBlocks(oldDoc, newDoc, {maxCells: 100000})` returns
+`{changes, fallback}` for valid document Nodes from the same schema instance,
+with identical document-level type, attrs and marks and only block children.
+Root markup differences and top-level inline children throw `RangeError`;
+use `compareDocumentMetadata` for root metadata-only revisions.
+
+Each change has `kind: 'insert' | 'delete' | 'replace'`, `oldFrom`, `oldTo`,
+`newFrom`, `newTo`, `before: Node[]` and `after: Node[]`. Positions are half-open
+ProseMirror UTF-16 ranges in the two original document contents. An insertion
+has an empty old range; a deletion has an empty new range. Arrays are new, but
+their nodes are shared immutable ProseMirror values: do not mutate nodes or attrs.
+This differs from the detached metadata snapshots returned by the metadata API.
+
+```js
+const {changes, fallback} = compareDocumentBlocks(oldDoc, newDoc)
+for (const change of changes) {
+  console.log(change.kind, change.oldFrom, change.newFrom)
+  // Render change.before and change.after separately with your own schema renderer.
+}
+```
+
+Equal prefix/suffix blocks are retained first. In the remaining middle, exact
+`Node.eq` matches anchor a longest common subsequence (including text, attrs and
+marks). Ties consume the old block first. Unmatched runs become one replacement,
+insertion or deletion. Repeated equal blocks have deterministic correspondence,
+not proven identity; reordering is represented by deletion/insertion, never moves.
+Nested edits are whole top-level block replacements, not fine-grained nested diffs.
+No mixed document is created, so strict single-child containers stay intact.
+
+`maxCells` is an integer from 0 to 1,000,000 (default 100,000), bounding the LCS
+matrix cells, including its empty row/column. If the middle needs more cells,
+one coarse middle change is returned with `fallback: true`. Pure insert/delete
+needs no matrix and has `fallback: false`, including with a zero budget.
+The budget does not bound total time: schema validation, large-subtree equality,
+prefix/suffix scanning and result construction still cost time. This is a block
+range query, not an editor transaction, position-mapping or accept/reject engine.
+
+## Development commands
 
 ### Read-only metadata review example
 

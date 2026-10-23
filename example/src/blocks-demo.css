@@ -37,3 +37,7 @@ footer { font-size: 13px; margin-top: 32px; color: #53675d; }
   .controls label, .controls select { flex-basis: 100%; }
   .document { max-height: 28rem; }
 }
+
+.mark-description-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.mark-description-warning { font-weight: 600; }
+.mark-description-list { padding-left: 18px; }

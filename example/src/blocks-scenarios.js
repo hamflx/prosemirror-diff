@@ -93,6 +93,9 @@ export const scenarios = [
     [runs([text('old', 'highlight')])], [runs([text('new', 'highlight')])]),
   scenario('text-hard-break', 'Unsupported hard break', 'Non-text inline content remains outside text-detail support.',
     [runs([text('same'), schema.node('hard_break')])], [p('same')]),
+  scenario('marked-many-links', 'Browse many link descriptions', 'Each block retains all link snapshots in pages of 50. Unsupported formatting stays explicitly noted on every page. The two blocks and document sides have independent page controls.',
+    [0, 1].map(block => runs([...Array.from({length: 101}, (_, i) => text('a', 'link', {href: 'https://example.org/old/' + block + '/' + i + (i === 100 ? '/' + 'long-segment-'.repeat(20) : ''), title: i % 2 ? null : ''})), text('?', 'highlight')])),
+    [0, 1].map(block => runs([...Array.from({length: 101}, (_, i) => text('a', 'link', {href: 'https://example.org/new/' + block + '/' + i + (i === 100 ? '/' + 'long-segment-'.repeat(20) : ''), title: i % 2 ? null : ''})), text('?', 'highlight')]))),
   scenario('unchanged', 'Identical documents', 'No block changes: there are no selected ranges or active navigation controls.',
     [p('Unchanged'), image(false)], [p('Unchanged'), image(false)])
 ]

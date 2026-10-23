@@ -165,6 +165,40 @@ The budget does not bound total time: schema validation, large-subtree equality,
 prefix/suffix scanning and result construction still cost time. This is a block
 range query, not an editor transaction, position-mapping or accept/reject engine.
 
+### Optional nested block details
+
+Pass `maxDepth` (an integer from 0 through 32, default 0) to add informational
+details inside eligible replacement events. Default output is unchanged and
+contains no `details` fields. The complete parent replacement always remains.
+
+```js
+const result = compareDocumentBlocks(oldDoc, newDoc, {maxDepth: 2, maxCells: 100000})
+// A replacement may have details: {changes, fallback, truncated}.
+// Render parent and child information hierarchically; do not apply both as edits.
+```
+
+Only a one-node-to-one-node replacement with identical `sameMarkup`, non-atom
+containers, and block-only direct children is eligible. Different types, attrs
+or marks, inline content, atoms and multi-node gaps remain whole-block events.
+This is a deterministic content correspondence, not proof of shared identity.
+Child ranges use absolute positions in the original documents, including each
+container opening token. Nodes continue to be shared immutable values.
+
+Depth 1 compares the children of top-level eligible replacements; depth 2 can
+compare their eligible child containers, and so on. At the depth limit, an
+otherwise eligible event has `details: {changes: [], fallback: false,
+truncated: true}`. Its empty details do not mean that the contents are equal.
+
+All levels share the **one** `maxCells` allocation budget, debited root first,
+then depth-first in event order. If a layer exceeds the remaining budget, it
+returns a coarse change with `fallback: true` and does not refine that layer.
+The full parent event still carries its original before/after nodes. `fallback`
+and `truncated` describe only their own layer, not the entire subtree; inspect
+descendant `details` recursively for deeper fallback/truncation. A parent layer
+can therefore have both flags false while a descendant is truncated. The
+top-level `fallback` keeps its previous meaning. Budget and depth are precision
+controls, not a whole-call deadline or protection against arbitrarily deep input.
+
 ## Development commands
 
 ### Read-only block review example

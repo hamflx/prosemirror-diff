@@ -2,6 +2,16 @@
 
 Compare two ProseMirror documents and mark inserted and deleted content.
 
+## Working from a Git checkout
+
+Run `npm ci` and `npm run build` before loading the package entry from a checkout:
+the package entry points refer to generated files in `lib/`. These commands do
+not publish a package. To verify native source and built CJS/ESM exports after
+building, run `node test/smoke-metadata-exports.mjs`. The source entry was verified
+with native Node 24.19.0; this does not establish support for every older Node
+version. The existing module-type warning can still appear because the package
+does not declare `type: "module"`.
+
 ## Diff levels
 
 Character-level diffing remains the default:

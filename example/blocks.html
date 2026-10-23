@@ -63,6 +63,14 @@
         <button id="text-next" type="button" disabled>Next text detail</button>
       </div>
       <p id="text-status" role="status" aria-live="polite"></p>
+      <p>All text details remain available. The list shows up to 50 per page.
+        Previous/Next text detail traverses every detail across pages.
+        Page buttons select the first detail on the destination page.</p>
+      <div class="controls" aria-label="Text detail pages">
+        <button id="text-page-previous" type="button" disabled>Previous text page</button>
+        <button id="text-page-next" type="button" disabled>Next text page</button>
+      </div>
+      <p id="text-page-status" role="status" aria-live="polite">No text detail page</p>
       <ol id="text-changes"></ol>
     </section>
     <footer>This fixed-schema example is not an editor, patch or accept/reject workflow.</footer>

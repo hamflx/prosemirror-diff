@@ -304,6 +304,17 @@ rendering costs for many detail rows or guarantee whole-page responsiveness.
 The synchronous helper benchmark remains a computation reference, not browser
 response-time evidence. See the [browser measurement record](docs/evolution/2026-10-23-text-responsiveness.md).
 
+The text-detail list renders at most 50 rows per page while retaining every
+returned hunk. Previous/Next text detail crosses pages; Previous/Next text page
+selects the first detail of the destination page. The panel reports the selected
+global detail, visible range, total and page count. Changing the selected block,
+including returning to a cached result, resets to the first page and detail.
+The **Review many separated text edits** fixture contains 600 separated changes,
+but the algorithm may return fewer, coarser hunks under its deadline; the UI always
+reports the actual result. Source documents and complete parent events remain
+intact. See the [pagination investigation](docs/evolution/2026-10-23-text-pagination.md)
+for the isolated DOM-scale experiment and its measurement limits.
+
 ### Read-only metadata review example
 
 The **Caller-selected paragraph** fixture retains two complete documents with

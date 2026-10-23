@@ -35,7 +35,9 @@
     "demo:metadata": "vite --config example/vite.metadata.config.mjs --host 127.0.0.1",
     "build:metadata-demo": "vite build --config example/vite.metadata.config.mjs",
     "demo:blocks": "vite --config example/vite.blocks.config.mjs --host 127.0.0.1",
-    "build:blocks-demo": "vite build --config example/vite.blocks.config.mjs"
+    "build:blocks-demo": "vite build --config example/vite.blocks.config.mjs",
+    "demo:legacy": "vite --config example/vite.legacy.config.mjs --host 127.0.0.1",
+    "build:legacy-demo": "vite build --config example/vite.legacy.config.mjs"
   },
   "repository": {
     "type": "git",

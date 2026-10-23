@@ -27,3 +27,5 @@ are inferred from repository activity.
 Completed: [legacy renderer schema validation](2026-10-23-legacy-schema-validation.md).
 
 Candidate: [incremental text highlights](2026-10-23-incremental-text-highlights.md).
+
+Candidate: [legacy combined-view recovery example](2026-10-23-legacy-migration.md).

@@ -10,6 +10,33 @@ Character-level diffing remains the default:
 const result = diffEditor(schema, oldDoc, newDoc)
 ```
 
+Valid originals can still be impossible to combine under their schema, for
+example exclusive code marks or a container allowing only one child. Handle that
+specific output rejection while keeping both originals and clearing any stale
+combined view:
+
+```js
+let combined = null
+let message = ''
+try {
+  combined = diffEditor(schema, oldDoc, newDoc)
+} catch (error) {
+  if (!(error instanceof RangeError) ||
+      !error.message.startsWith('Diff output cannot be represented in the original schema:') ||
+      !(error.cause instanceof RangeError)) throw error
+  message = 'Combined view unavailable. Keep the Before and After versions visible.'
+}
+// Render oldDoc and newDoc independently regardless of combined.
+// Replace any previous combined result with combined (or an empty view + message).
+```
+
+This checks the documented output-validation prefix and cause; it does not catch
+every `RangeError`. Invalid inputs, unsupported options, missing mark definitions
+and unexpected exceptions still need their own handling. An unavailable combined
+view does **not** mean no changes occurred. Do not remove marks or relax the schema
+to suppress the error. The [current-source recovery example](#legacy-recovery-example)
+implements this recipe with supported and rejected cases.
+
 Word-level diffing first aligns Unicode words, whitespace, and punctuation. Paired replacements are then refined by grapheme so small edits such as `JSON5` to `JSON6` only mark the changed characters. Standalone word or block insertions and deletions retain `level: 'word'`.
 
 ```js
@@ -366,3 +393,19 @@ npm run build
 See [composition counterexamples and schema boundaries](docs/evolution/2026-10-23-composition-contracts.md) before combining block, metadata and plain-text results. The record includes reproducible legacy renderer limitations for exclusive marks and mark-disallowing nodes.
 
 Legacy mixed-document APIs validate content and mark sets at their public boundaries. An unrepresentable mixed result now throws `RangeError` with its validation cause instead of returning an invalid node; valid outputs keep their comparison behavior. This does not validate arbitrary attrs or make all schemas representable. See [legacy schema validation](docs/evolution/2026-10-23-legacy-schema-validation.md) for helper scope, compatibility and external-result alternatives.
+
+## Legacy recovery example
+
+From the repository root, run `npm ci` and `npm run demo:legacy`, then open
+`http://127.0.0.1:5173/legacy.html`. `npm run build:legacy-demo` produces
+`example/dist/legacy`; serve that directory over HTTP. This read-only example
+imports the current source directly. It keeps both originals visible and clears
+stale combined content when exclusive marks, mark-disallowing code blocks or
+strict containers prevent a mixed result. Switching back to a supported input
+restores the combined view. It is a recovery recipe, not automatic complete review
+or a promise that metadata comparison supports simultaneous text/formatting edits.
+
+The older Vue editor (`example/src/App.vue`, built with `example/vite.config.js`)
+still locks `@hamflx/prosemirror-diff` to `0.0.3` and has no local-source alias. It
+has not been migrated to these new errors; its bare call is not this recipe. No
+Vue/Tiptap dependency upgrade or schema alteration is part of this change.

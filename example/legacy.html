@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Legacy comparison recovery</title></head>
+<body><main>
+  <header><p class="eyebrow">PROSEMIRROR DIFF / READ-ONLY EXAMPLE</p>
+    <h1>Keep the originals when a combined view cannot be built.</h1>
+    <p>Some valid documents cannot be combined with change marks under their original rules.</p>
+  </header>
+  <section class="controls" aria-label="Comparison example"><label for="scenario">Example</label><select id="scenario"></select></section>
+  <p id="scenario-note"></p>
+  <p id="comparison-status" role="status" aria-live="polite"></p>
+  <p id="comparison-message" class="scope"></p>
+  <div class="documents">
+    <section><h2>Before — original</h2><div id="before" class="document"></div></section>
+    <section><h2>After — original</h2><div id="after" class="document"></div></section>
+  </div>
+  <section><h2>Combined marked result</h2><div id="combined" class="document"></div></section>
+  <p>This fixed-schema example does not modify document rules, remove formatting, or replace a failed comparison with an unchanged result. Unrelated errors are not handled as an unsupported combined view.</p>
+</main><script type="module" src="/src/legacy-migration-demo.js"></script></body>
+</html>

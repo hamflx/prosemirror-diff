@@ -74,6 +74,46 @@ opting in. The default remains the legacy UTF-16 character algorithm.
 
 ## Compare formatting and attributes without a mixed document
 
+### A caller-selected node pair
+
+`compareNodeMetadata(oldNode, newNode, {oldFrom = 0, newFrom = 0} = {})`
+compares metadata within an explicitly selected pair, even when unrelated parts
+of the surrounding documents contain text edits. The caller is responsible for
+the correspondence: this API does not infer identity or pair multi-node gaps.
+
+```js
+import {compareNodeMetadata} from '@hamflx/prosemirror-diff'
+
+const changes = compareNodeMetadata(oldParagraph, newParagraph, {
+  oldFrom: oldParagraphPosition,
+  newFrom: newParagraphPosition
+})
+```
+
+Each offset is the node's **outer start** in its own document, defaulting
+independently to zero for node-local coordinates. Node attrs/marks span
+`[from, from + node.nodeSize)`; child content begins at `from + 1`.
+Offsets and range ends must be non-negative safe integers, otherwise `RangeError`
+is thrown. The caller supplies the containing-document coordinates; the function
+cannot verify that the node actually occupies that position in a document.
+
+Pass valid non-text, non-document Nodes from the same schema instance and of the
+same type. Paragraphs, strict containers and image leaves are supported without
+constructing a temporary document. Exact text and non-text structure must match;
+formatting-induced text splits may differ. A text/type/structure mismatch throws
+`RangeError`. Direct text nodes are rejected with `TypeError` (compare their
+parent); document roots are rejected with `TypeError` (use the document API
+below). Different schema instances and non-node inputs also throw `TypeError`.
+
+Records, traversal order, UTF-16 indexing and detached metadata snapshots follow
+the document API below, but the two sides may have different absolute positions.
+Snapshot handling has the same plain-data contract; it is not an isolation
+boundary for malicious JavaScript objects. Inputs are schema-checked and never
+modified. Text edits within the selected pair still reject the whole comparison;
+this is not a patch or general structural comparison API.
+
+### Whole-document metadata revisions
+
 `compareDocumentMetadata(oldDoc, newDoc)` reports **metadata-only revisions**
 as detached data. Pass valid ProseMirror document Nodes from the same schema
 instance; JSON snapshots can be loaded with `Node.fromJSON(schema, json)`.

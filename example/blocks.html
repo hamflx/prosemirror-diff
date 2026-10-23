@@ -17,14 +17,23 @@
       <label for="budget">Alignment budget</label>
       <select id="budget">
         <option value="100000">Default: 100,000 cells</option>
+        <option value="20">Shared budget: 20 cells</option>
+        <option value="24">Shared budget: 24 cells</option>
         <option value="0">Zero cells: allow coarse fallback</option>
+      </select>
+      <label for="depth">Detail depth</label>
+      <select id="depth">
+        <option value="0">0: top-level only</option>
+        <option value="1">1: child blocks</option>
+        <option value="2">2: grandchildren</option>
       </select>
       <button id="previous" type="button">Previous change</button>
       <button id="next" type="button">Next change</button>
     </section>
     <p id="status" role="status" aria-live="polite"></p>
     <p id="precision" role="status" aria-live="polite"></p>
-    <p class="scope"><strong>Top-level blocks only.</strong> Nested changes replace the containing block.
+    <p class="scope"><strong>Complete parent events, optional child details.</strong>
+      Depth 0 preserves top-level-only results. Details are informational: do not apply parent and child events as separate edits.
       Repeated blocks have deterministic correspondence, not proven identity or detected moves.
       The budget bounds the alignment matrix, not total running time. Positions are ProseMirror UTF-16 offsets.</p>
     <p id="scenario-note"></p>
@@ -35,7 +44,8 @@
     </div>
     <section aria-labelledby="changes-title">
       <h2 id="changes-title">Changes</h2>
-      <p>Select a change to highlight its blocks. An empty range is shown as a position marker on the opposite side.</p>
+      <p>Select a parent or child event to highlight its exact block range. Empty ranges have position markers.
+        Previous/Next visits parents before their children. Each detail layer reports its own precision.</p>
       <ol id="changes"></ol>
     </section>
     <footer>This fixed-schema example is not an editor, patch or accept/reject workflow.</footer>

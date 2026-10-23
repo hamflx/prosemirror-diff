@@ -11,7 +11,7 @@ Changes require independent review before merging.
 | --- | --- |
 | Oct 21 | Completed: [text-run/inline-leaf crash](2026-10-21.md) |
 | Oct 22 | Completed: [public node-copy API](2026-10-22.md), [grapheme comparison](2026-10-22-grapheme.md), [structured metadata comparison](2026-10-22-metadata.md), [read-only metadata example](2026-10-22-metadata-demo.md) |
-| Oct 23 | Completed: [top-level block changes](2026-10-23-blocks.md), [consumer DOM and range regressions](2026-10-23-dom.md), [block review example](2026-10-23-block-demo.md), [nested block details](2026-10-23-nested-blocks.md); candidate: [caller-selected node metadata](2026-10-23-node-metadata.md) |
+| Oct 23 | Completed: [top-level block changes](2026-10-23-blocks.md), [consumer DOM and range regressions](2026-10-23-dom.md), [block review example](2026-10-23-block-demo.md), [nested block details](2026-10-23-nested-blocks.md), [caller-selected node metadata](2026-10-23-node-metadata.md); candidate: [nested review example](2026-10-23-nested-demo.md) |
 | Oct 24 | Pending: Unicode boundaries in default char mode versus word mode |
 | Oct 25 | Pending: empty documents, leaf nodes and nested schema validity |
 | Oct 26 | Pending: pathological edit distance and deadline coverage |

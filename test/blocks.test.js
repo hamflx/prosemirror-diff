@@ -23,6 +23,20 @@ function reconstruct(old, result) {
   return old.copy(content.append(old.content.cut(cursor)))
 }
 
+function assertRanges(old, next, result) {
+  let oldCursor = 0, newCursor = 0
+  for (const change of result.changes) {
+    expect(change.oldFrom).toBeGreaterThanOrEqual(oldCursor)
+    expect(change.newFrom).toBeGreaterThanOrEqual(newCursor)
+    expect(old.content.cut(change.oldFrom, change.oldTo).eq(Fragment.fromArray(change.before))).toBe(true)
+    expect(next.content.cut(change.newFrom, change.newTo).eq(Fragment.fromArray(change.after))).toBe(true)
+    expect(old.content.cut(oldCursor, change.oldFrom).eq(next.content.cut(newCursor, change.newFrom))).toBe(true)
+    oldCursor = change.oldTo
+    newCursor = change.newTo
+  }
+  expect(old.content.cut(oldCursor).eq(next.content.cut(newCursor))).toBe(true)
+}
+
 describe('compareDocumentBlocks', () => {
   it('returns no changes for equal documents and empty roots', () => {
     expect(compareDocumentBlocks(doc([]), doc([]))).toEqual({changes: [], fallback: false})
@@ -78,6 +92,13 @@ describe('compareDocumentBlocks', () => {
       expect(reconstruct(old, result).eq(next)).toBe(true)
     }
   })
+  it('includes the empty matrix row/column at the exact budget boundary', () => {
+    const old = doc([p('old'), p('same')]), next = doc([p('new'), p('same')])
+    expect(compareDocumentBlocks(old, next, {maxCells: 4}).fallback).toBe(false)
+    expect(compareDocumentBlocks(old, next, {maxCells: 3}).fallback).toBe(true)
+    const inserted = doc([p('new'), p('old'), p('extra'), p('same')])
+    expect(compareDocumentBlocks(old, inserted, {maxCells: 0}).fallback).toBe(true)
+  })
   it.each([-1, 1.5, NaN, Infinity, 1000001])('rejects invalid budgets: %s', maxCells => {
     expect(() => compareDocumentBlocks(doc([]), doc([]), {maxCells})).toThrow(RangeError)
   })
@@ -102,8 +123,12 @@ describe('compareDocumentBlocks', () => {
       const a = doc(Array.from({length: random(9)}, () => p(['', 'a', 'b', '😀'][random(4)])))
       const b = doc(Array.from({length: random(9)}, () => p(['', 'a', 'b', '😀'][random(4)])))
       for (const maxCells of [0, 100000]) {
-        expect(reconstruct(a, compareDocumentBlocks(a, b, {maxCells})).eq(b)).toBe(true)
-        expect(reconstruct(b, compareDocumentBlocks(b, a, {maxCells})).eq(a)).toBe(true)
+        const forward = compareDocumentBlocks(a, b, {maxCells})
+        const backward = compareDocumentBlocks(b, a, {maxCells})
+        assertRanges(a, b, forward)
+        assertRanges(b, a, backward)
+        expect(reconstruct(a, forward).eq(b)).toBe(true)
+        expect(reconstruct(b, backward).eq(a)).toBe(true)
       }
     }
   })

@@ -157,8 +157,10 @@ No mixed document is created, so strict single-child containers stay intact.
 
 `maxCells` is an integer from 0 to 1,000,000 (default 100,000), bounding the LCS
 matrix cells, including its empty row/column. If the middle needs more cells,
-one coarse middle change is returned with `fallback: true`. Pure insert/delete
-needs no matrix and has `fallback: false`, including with a zero budget.
+one coarse middle change is returned with `fallback: true`. If trimming the equal
+prefix/suffix leaves one side empty, the remaining insert/delete needs no matrix
+and has `fallback: false`, including with a zero budget. Multiple insertions
+interleaved with unchanged blocks may still need a matrix or use fallback.
 The budget does not bound total time: schema validation, large-subtree equality,
 prefix/suffix scanning and result construction still cost time. This is a block
 range query, not an editor transaction, position-mapping or accept/reject engine.
@@ -170,7 +172,14 @@ range query, not an editor transaction, position-mapping or accept/reject engine
 From the repository root, run `npm ci` then `npm run demo:metadata` and open
 `http://127.0.0.1:5173/metadata.html`. Use `npm run build:metadata-demo` to build
 the static example into `example/dist/metadata` (serve that directory over HTTP).
-The Vite development tools require Node 20.19+ or 22.12+.
+Vite and the jsdom integration tests require Node 20.19+, 22.12+ or 24+.
+
+`npm test` includes the actual example HTML/entry module in jsdom and tests
+navigation, exact highlights, rejected/empty-state cleanup and recovery. jsdom
+does not perform layout or scrolling; these tests stub only `scrollIntoView`
+and do not replace browser visual/keyboard testing. Demo links cancel ordinary
+clicks; their retained URLs can still be opened with browser context menus or
+middle-button navigation.
 
 The example uses this checkout's source API and fixed fixtures for bold, link
 targets and image attributes. Select a change, or use Previous/Next, to highlight

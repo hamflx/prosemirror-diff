@@ -24,10 +24,13 @@ imports or make the package ESM-only.
 
 The locked ProseMirror 1.18.1 package does not provide declarations on its
 CommonJS export path. Its direct CommonJS type imports remain a separate
-dependency limitation. Direct JavaScript-source consumers have complete tested
-Node contracts under Bundler resolution; under NodeNext only metadata record
-shapes are verified, and ProseMirror Node types can still degrade to `any`.
-Prefer the declared package entry for NodeNext consumers.
+dependency limitation. Repository JavaScript-source fixtures use `allowJs` and
+verify Node contracts under Bundler resolution. Installed deep-source imports
+from `node_modules` do not gain types by default: the tested configuration needs
+`allowJs: true` and `maxNodeModuleJsDepth: 2` to resolve the source JSDoc. With
+ProseMirror 1.18.1, source NodeNext still loses Node types to `any`, although
+metadata record shapes are verified. Prefer the declared package root: actual
+tarball consumers passed Bundler and NodeNext with ProseMirror 1.18.1 and 1.25.12.
 
 Types describe data shapes, not proof of matching schemas, valid document JSON,
 finite metadata numbers, safe offsets, or representable combined output. All

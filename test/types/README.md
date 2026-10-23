@@ -24,3 +24,14 @@ parameters and preserved block nodes can remain `any` in that mode. The addition
 explicitly select the dependency's ESM type resolution and retain these Node
 contracts in both tested modes. This does not fix applications' own direct
 CommonJS imports from that dependency.
+
+These source fixtures import files in the repository with `allowJs`; they do
+not establish default typing for installed deep-source imports. Separate actual
+tarball installations passed the package-root fixtures with ProseMirror 1.18.1
+and 1.25.12 in both Bundler and NodeNext modes (TypeScript 5.9.3). Installed
+deep-source imports initially failed all four configurations with TS7016 at the
+default node_modules JavaScript depth. With `allowJs: true` and
+`maxNodeModuleJsDepth: 2`, Bundler passed with both versions, and NodeNext passed
+with 1.25.12. The 1.18.1 NodeNext Node-contract negative cases remained TS2578
+because of `any`; those failures are retained as limitations, not passes. Prefer
+the declared package root over deep-source imports.

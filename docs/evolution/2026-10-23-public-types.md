@@ -22,9 +22,11 @@ does not resolve a declaration under NodeNext. Type-only resolution-mode import
 in the package declaration selects its real ESM types. This syntax requires
 TypeScript 5.3 or newer; validation here uses 5.9.3 only. It does not modify
 runtime resolution or repair a consumer's separate direct CommonJS import of
-ProseMirror. Source Bundler fixtures check Node contracts and metadata shapes;
-source NodeNext fixtures check metadata shapes only, because its Node types can
-still be `any`. This limitation is explicit rather than hidden by skipLibCheck.
+ProseMirror. Repository source fixtures use `allowJs`: Bundler checks Node
+contracts and metadata shapes; NodeNext checks metadata shapes only, because
+the locked dependency's Node types can still be `any`. This limitation is
+explicit rather than hidden by skipLibCheck. These repository checks do not
+imply default types for installed deep-source imports.
 
 ## Validation
 
@@ -39,6 +41,14 @@ still be `any`. This limitation is explicit rather than hidden by skipLibCheck.
 - Declaration export inventory smoke: every runtime export covered.
 - `npm pack --dry-run --json --ignore-scripts` includes `index.d.ts`; no package
   was published. Existing Node module-type warnings remain.
+- Actual tarball installations passed package-root strict consumers with
+  ProseMirror 1.18.1 and 1.25.12, each in Bundler and NodeNext (TypeScript 5.9.3).
+  Installed deep-source imports initially failed all four configurations with
+  TS7016 at the default node_modules JavaScript depth. Adding `allowJs: true`
+  and `maxNodeModuleJsDepth: 2` allowed source JSDoc resolution: both Bundler
+  versions and NodeNext with 1.25.12 passed. NodeNext with 1.18.1 still produced
+  TS2578 for Node-contract negative cases because those Node values were `any`.
+  These failures are retained; the declared package root is recommended.
 
 Types cannot prove schema identity, valid JSON content, acyclic finite metadata,
 safe positions or representable output. Runtime validation remains authoritative.

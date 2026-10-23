@@ -34,4 +34,6 @@ Candidate: [mark-description pages](2026-10-23-mark-description-pages.md).
 
 Candidate: [native Node source entry](2026-10-23-native-source-entry.md).
 
+Candidate: [public TypeScript contracts](2026-10-23-public-types.md).
+
 Candidate: [ProseMirror model compatibility matrix](2026-10-23-model-compatibility.md).

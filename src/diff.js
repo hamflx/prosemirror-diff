@@ -594,7 +594,8 @@ const createTextNodeUnchecked = (schema, content, marks = []) => {
 }
 
 // Full recursive checks belong at public boundaries, never at each internal layer.
-// Node.check checks content and mark sets; it does not validate arbitrary attrs.
+// Node.check validates content/mark sets and, in versions supporting it,
+// schema-defined attribute validators. It is not general-purpose JSON validation.
 const checkedNode = (node, phase) => {
   try { node.check() } catch (error) {
     if (!(error instanceof RangeError)) throw error

@@ -3,9 +3,11 @@
   "version": "0.0.8",
   "description": "PromiseMirror state diff",
   "main": "lib/index.cjs.js",
+  "types": "index.d.ts",
   "module": "lib/index.esm.js",
   "umd": "lib/index.umd.js",
   "files": [
+    "index.d.ts",
     "src",
     "lib"
   ],

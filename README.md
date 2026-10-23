@@ -12,6 +12,27 @@ with native Node 24.19.0; this does not establish support for every older Node
 version. The existing module-type warning can still appear because the package
 does not declare `type: "module"`.
 
+## TypeScript consumers
+
+The package ships `index.d.ts` for every public runtime export, including
+discriminated `MetadataChange` records and nested `BlockChange` details. Import
+functions and types from `@hamflx/prosemirror-diff`. TypeScript 5.9.3 strict
+consumers were verified with Bundler and NodeNext resolution. The declaration
+uses type-only `resolution-mode: "import"` syntax (TypeScript 5.3 or newer) to
+resolve ProseMirror's existing ESM declarations; it does not change runtime
+imports or make the package ESM-only.
+
+The locked ProseMirror 1.18.1 package does not provide declarations on its
+CommonJS export path. Its direct CommonJS type imports remain a separate
+dependency limitation. Direct JavaScript-source consumers have complete tested
+Node contracts under Bundler resolution; under NodeNext only metadata record
+shapes are verified, and ProseMirror Node types can still degrade to `any`.
+Prefer the declared package entry for NodeNext consumers.
+
+Types describe data shapes, not proof of matching schemas, valid document JSON,
+finite metadata numbers, safe offsets, or representable combined output. All
+documented runtime validation and error handling still apply.
+
 ## Diff levels
 
 Character-level diffing remains the default:
@@ -409,7 +430,7 @@ npm run build
 
 See [composition counterexamples and schema boundaries](docs/evolution/2026-10-23-composition-contracts.md) before combining block, metadata and plain-text results. The record includes reproducible legacy renderer limitations for exclusive marks and mark-disallowing nodes.
 
-Legacy mixed-document APIs validate content and mark sets at their public boundaries. An unrepresentable mixed result now throws `RangeError` with its validation cause instead of returning an invalid node; valid outputs keep their comparison behavior. This does not validate arbitrary attrs or make all schemas representable. See [legacy schema validation](docs/evolution/2026-10-23-legacy-schema-validation.md) for helper scope, compatibility and external-result alternatives.
+Legacy mixed-document APIs validate content and mark sets at their public boundaries. An unrepresentable mixed result now throws `RangeError` with its validation cause instead of returning an invalid node; valid outputs keep their comparison behavior. The original ProseMirror 1.18.1 checks did not validate arbitrary attrs. Newer ProseMirror versions may run schema-defined attribute validators during checks or construction; this library delegates to that version's behavior and does not guarantee a fixed error phase. This is not general-purpose JSON validation and does not make all schemas representable. See [legacy schema validation](docs/evolution/2026-10-23-legacy-schema-validation.md) for helper scope, compatibility and external-result alternatives.
 
 ## Legacy recovery example
 

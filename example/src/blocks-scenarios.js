@@ -8,11 +8,14 @@ export const schema = new Schema({nodes: {
   section: {group: 'block', content: 'block*'},
   image: {group: 'block', attrs: {src: {}, alt: {default: ''}}},
   inline_token: {inline: true, group: 'inline', atom: true, attrs: {label: {}}},
+  hard_break: {inline: true, group: 'inline'},
   text: {group: 'inline'}
-}, marks: {strong: {}}})
+}, marks: {strong: {}, em: {}, code: {excludes: '_'}, link: {attrs: {href: {}, title: {default: null}}}, highlight: {attrs: {color: {default: 'yellow'}}}}})
 const p = value => schema.node('paragraph', null, value ? schema.text(value) : null)
 const doc = nodes => schema.node('doc', null, nodes)
 const section = nodes => schema.node('section', null, nodes)
+const text = (value, mark, attrs) => schema.text(value, mark ? [schema.mark(mark, attrs)] : [])
+const runs = children => schema.node('paragraph', null, children)
 const image = revised => schema.node('image', {
   src: revised ? new URL('../assets/cover-after.svg', import.meta.url).href : new URL('../assets/cover-before.svg', import.meta.url).href,
   alt: revised ? 'Revised blue cover' : 'Original green cover'
@@ -61,7 +64,7 @@ export const scenarios = [
     [p('AB')], [p('xAyBz')]),
   scenario('text-nested', 'Review nested Unicode text', 'Select depth 1, then the child event. Text ranges include the container and textblock opening positions.',
     [section([p('Keep'), p('Hi 👨‍👩‍👧‍👦!')])], [section([p('Keep'), p('Hi 👩‍👩‍👧‍👦!')])]),
-  scenario('text-marks', 'Unsupported marked text', 'The bold-only change remains a block replacement. Plain text refinement must not erase marks.',
+  scenario('text-marks', 'Formatting-only replacement', 'The text is unchanged but formatting differs. Text details do not compare formatting; use metadata comparison for same-text changes.',
     [p('Same words')], [schema.node('paragraph', null, schema.text('Same words', [schema.mark('strong')]))]),
   scenario('text-nested-shifted', 'Review different nested offsets', 'At depth 1, the final child text event has different old/new positions because an earlier sibling changed length.',
     [section([p('a'), p('Anchor'), p('Hi 👨‍👩‍👧‍👦!')])], [section([p('long lead'), p('Anchor'), p('Hi 👩‍👩‍👧‍👦!')])]),
@@ -71,6 +74,25 @@ export const scenarios = [
   scenario('text-many', 'Review many separated text edits', 'This input has 600 separated replacements. The text algorithm may return coarser details under its deadline; the list reports the actual result total. All returned details remain available in pages of 50.',
     [p(Array.from({length: 600}, (_, i) => `a${i} `).join(''))],
     [p(Array.from({length: 600}, (_, i) => `b${i} `).join(''))]),
+  scenario('marked-mixed', 'Review strong, emphasis and code text', 'Each original keeps its own formatting. Text correspondence does not independently compare marks.',
+    [runs([text('Bold old ', 'strong'), text('notes ', 'em'), text('x()', 'code')])],
+    [runs([text('Bold new ', 'strong'), text('notes ', 'em'), text('y()', 'code')])]),
+  scenario('marked-grapheme', 'A grapheme across mark boundaries', 'The logical changed grapheme is whole even though original formatting splits its displayed fragments.',
+    [runs([text('e'), text('\u0301', 'strong')])], [runs([text('e'), text('\u0300', 'em')])]),
+  scenario('marked-link', 'Link attributes plus inserted text', 'Both link snapshots are visible and non-navigating. The text detail does not independently report the href/title change.',
+    [runs([text('read', 'link', {href: 'https://example.org/old', title: 'Old notes'})])],
+    [runs([text('read more', 'link', {href: 'https://example.org/new', title: 'New notes'})])]),
+  scenario('marked-empty', 'Insert formatted text into an empty block', 'The empty counterpart is an inline marker; the new flag retains strong formatting.',
+    [p('')], [runs([text('🇨🇦', 'strong')])]),
+  scenario('marked-repeat', 'Repeated letters with different marks', 'Repeated a characters have ambiguous correspondence. Text alignment does not establish identity or edit history, nor compare formatting independently.',
+    [runs([text('a', 'strong'), text('a', 'em')])], [runs([text('a', 'em')])]),
+  scenario('marked-nested', 'Formatted text at shifted nested offsets', 'Select depth 1 and the last child. Old/new absolute ranges differ after an earlier sibling length change.',
+    [section([p('a'), p('Anchor'), runs([text('old', 'code')])])],
+    [section([p('long lead'), p('Anchor'), runs([text('new', 'code')])])]),
+  scenario('marked-unknown', 'Unsupported mark vocabulary', 'An unsupported highlight mark is explicitly labelled. Text details refuse to silently discard it.',
+    [runs([text('old', 'highlight')])], [runs([text('new', 'highlight')])]),
+  scenario('text-hard-break', 'Unsupported hard break', 'Non-text inline content remains outside text-detail support.',
+    [runs([text('same'), schema.node('hard_break')])], [p('same')]),
   scenario('unchanged', 'Identical documents', 'No block changes: there are no selected ranges or active navigation controls.',
     [p('Unchanged'), image(false)], [p('Unchanged'), image(false)])
 ]

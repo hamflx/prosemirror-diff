@@ -15,6 +15,11 @@ its schema; the discussion considers decorations and the cost of nested editors.
 These capabilities are not unique to this library. The examples below are local
 contract reproductions, not external bug reports or evidence of usage volume.
 
+The table below describes the baseline above. The subsequent
+[marked text example](2026-10-23-marked-text-review.md) supports a fixed mark vocabulary
+while retaining the distinction between text correspondence and formatting comparison.
+It does not repair the legacy renderer limitations documented here.
+
 ## Contracts that must not be silently combined
 
 | Input / intent | Metadata comparison | Example plain-text details | Complete external block result |

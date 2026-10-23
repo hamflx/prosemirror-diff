@@ -65,8 +65,8 @@ it('locates empty text and inline boundary markers without inserting label text 
   choose('scenario', 'text-boundaries')
   for (const position of ['1', '2', '3']) {
     expect(highlight('before').dataset.from).toBe(position)
-    expect(highlight('before').previousSibling.textContent).toBe('AB'.slice(0, Number(position) - 1))
-    expect(highlight('before').nextSibling.textContent).toBe('AB'.slice(Number(position) - 1))
+    expect(highlight('before').previousSibling?.textContent ?? '').toBe('AB'.slice(0, Number(position) - 1))
+    expect(highlight('before').nextSibling?.textContent ?? '').toBe('AB'.slice(Number(position) - 1))
     expect(source('before').textContent).toBe('AB')
     expect(source('after').textContent).toBe('xAyBz')
     byId('text-next').click()
@@ -92,10 +92,10 @@ it('refines only the selected nested textblock and clears text state when parent
   expect(byId('text-owner').textContent).toBe('No selected block event')
 })
 
-it('shows marked and inline-atom originals while explicitly rejecting plain-text refinement', () => {
+it('explains same-text formatting changes and still rejects inline atoms', () => {
   choose('scenario', 'text-marks')
   expect(source('after').querySelector('strong').textContent).toBe('Same words')
-  expect(byId('text-status').textContent).toContain('do not support text marks')
+  expect(byId('text-status').textContent).toContain('Text unchanged; formatting differs')
   expect(byId('text-changes').children).toHaveLength(0)
   choose('scenario', 'text-inline-atom')
   expect(source('before').querySelector('.inline-token').textContent).toBe('[old token]')
@@ -124,7 +124,7 @@ it('compares only the selected block and reuses its details within one compariso
   expect(diffSpy).toHaveBeenCalledTimes(2)
   byId('previous').click()
   expect(diffSpy).toHaveBeenCalledTimes(2)
-  choose('scenario', 'text-marks')
+  choose('scenario', 'text-inline-atom')
   expect(diffSpy).toHaveBeenCalledTimes(2)
 })
 
@@ -143,4 +143,19 @@ it('renders source strings as text rather than HTML', async () => {
   expect(source('after').textContent).toBe(newNode.textContent)
   expect(byId('before').querySelector('img,script')).toBeNull()
   expect(byId('after').querySelector('img,script')).toBeNull()
+})
+
+it('locates formatted nested children using independent original positions', () => {
+  choose('scenario', 'marked-nested')
+  choose('depth', '1')
+  byId('next').click()
+  byId('next').click()
+  expect(highlight('before').dataset.from).toBe('13')
+  expect(highlight('after').dataset.from).toBe('21')
+  expect(highlight('before').parentElement.tagName).toBe('CODE')
+  expect(highlight('after').parentElement.tagName).toBe('CODE')
+  choose('scenario', 'marked-unknown')
+  expect(byId('text-status').dataset.state).toBe('unsupported')
+  expect(highlight('before')).toBeNull()
+  expect(byId('text-format-scope').hidden).toBe(false)
 })

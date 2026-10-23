@@ -37,3 +37,5 @@ Candidate: [native Node source entry](2026-10-23-native-source-entry.md).
 Candidate: [public TypeScript contracts](2026-10-23-public-types.md).
 
 Candidate: [ProseMirror model compatibility matrix](2026-10-23-model-compatibility.md).
+
+Candidate: [generated contract audit and package availability](2026-10-23-generated-contracts.md).

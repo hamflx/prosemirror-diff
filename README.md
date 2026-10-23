@@ -464,3 +464,35 @@ The older Vue editor (`example/src/App.vue`, built with `example/vite.config.js`
 still locks `@hamflx/prosemirror-diff` to `0.0.3` and has no local-source alias. It
 has not been migrated to these new errors; its bare call is not this recipe. No
 Vue/Tiptap dependency upgrade or schema alteration is part of this change.
+
+## Selected metadata in the block review example
+
+The block example (`npm run demo:blocks`, or `npm run build:blocks-demo`) now
+routes the currently selected one-to-one replacement through `compareNodeMetadata`.
+When text and structure match, its metadata panel shows marks/attributes with
+before/after snapshots and independent original coordinates. It preserves the
+complete block event and both original documents. Navigate records individually
+or in pages of 50; pagination limits rows, not the synchronous comparison cost.
+The alignment cell budget and the text detail size limit do not govern metadata.
+
+Try **Formatting-only replacement**, **Compare link metadata**, **Replace image
+attributes**, **Compare metadata at different offsets**, and **Page through
+metadata changes**. The fixed renderer locates text marks, block/image ranges,
+and `inline_token` records. Other unmappable records explicitly retain the parent
+event without claiming precise visual localization. Snapshot text is inert,
+including link attributes; unknown formatting remains uninterpreted.
+
+Changed text or structure is outside this metadata contract. Available text
+refinement remains partial and does not independently compare formatting. An
+inserted inline atom is a structural change even if `textContent` is unchanged.
+Validation/snapshot failures are shown as unavailable, not as zero differences.
+The example distinguishes expected structural rejection using the current
+internal error message; this is an example implementation dependency, not a
+new public error-code contract.
+
+One selection coordinator cancels/restores text work before metadata selection
+and restores metadata before text work. Metadata selection starts no text worker;
+late worker responses cannot replace the active metadata highlight. Reload and
+dispose clear both modes. No accept/reject, move identity, or mixed-document
+construction is introduced. Production-browser interaction validation for this
+integration remains pending; jsdom tests alone are not browser acceptance.

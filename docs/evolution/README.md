@@ -31,3 +31,5 @@ Completed: [incremental text highlights](2026-10-23-incremental-text-highlights.
 Completed: [legacy combined-view recovery example](2026-10-23-legacy-migration.md).
 
 Candidate: [mark-description pages](2026-10-23-mark-description-pages.md).
+
+Candidate: [native Node source entry](2026-10-23-native-source-entry.md).

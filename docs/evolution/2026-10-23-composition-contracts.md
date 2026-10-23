@@ -66,7 +66,7 @@ On this baseline, all char/word/grapheme modes reproduced these limitations:
 
 The legacy renderer appends display marks into schema-constrained content. Merely
 adding `diffMark` can conflict with exclusive marks or a parent's mark allowance;
-silently dropping source marks would lose meaning. These legacy validation failures remain unfixed. This batch does not change that
+silently dropping source marks would lose meaning. These failures were unfixed on this record's baseline. The subsequent [legacy schema validation boundary](2026-10-23-legacy-schema-validation.md) now rejects these mixed outputs explicitly; it does not make them representable. This batch does not change that
 public behavior, automatically modify schemas or claim arbitrary-schema legacy
 support. Its regression tests instead verify that external block events preserve
 valid original nodes, metadata rejects incompatible text edits, and the plain-text

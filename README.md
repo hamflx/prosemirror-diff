@@ -58,7 +58,7 @@ opting in. The default remains the legacy UTF-16 character algorithm.
 
 ## Guarantees
 
-- Calling `diffEditor` without options preserves the original character-level behavior.
+- Calling `diffEditor` without options retains character-level comparison for valid outputs. Inputs or mixed results that violate content/mark constraints now throw instead of returning invalid nodes.
 - Word tokenization preserves every source character and uses `Intl.Segmenter` when available, with a Unicode-aware fallback. Grapheme refinement uses a bundled UAX #29 segmenter in every environment.
 - Word/grapheme search budgets can degrade large, dissimilar inputs to coarser replacements while preserving text. They are not whole-call deadlines: segmentation, validation, output construction and legacy character mode have no total-time guarantee.
 - Word diff segments can always reconstruct both inputs by excluding insertions for the old text and deletions for the new text.
@@ -161,8 +161,8 @@ Snapshots support plain objects, arrays, strings, booleans, finite numbers,
 null and undefined; they do not invoke custom serializers.
 
 Consumers can use the records in side-by-side views or change lists while
-keeping strict schemas intact. Existing `diffEditor` output and its structural
-limitations are unchanged.
+keeping strict schemas intact. These APIs do not alter the legacy renderer's
+alignment; its schema-validation boundary rejects unrepresentable mixed output.
 
 ## Top-level block changes
 
@@ -357,3 +357,5 @@ npm run build
 ```
 
 See [composition counterexamples and schema boundaries](docs/evolution/2026-10-23-composition-contracts.md) before combining block, metadata and plain-text results. The record includes reproducible legacy renderer limitations for exclusive marks and mark-disallowing nodes.
+
+Legacy mixed-document APIs validate content and mark sets at their public boundaries. An unrepresentable mixed result now throws `RangeError` with its validation cause instead of returning an invalid node; valid outputs keep their comparison behavior. This does not validate arbitrary attrs or make all schemas representable. See [legacy schema validation](docs/evolution/2026-10-23-legacy-schema-validation.md) for helper scope, compatibility and external-result alternatives.

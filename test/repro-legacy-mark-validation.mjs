@@ -1,4 +1,5 @@
-// Diagnostic reproduction, not a test asserting invalid output is desirable.
+// Diagnostic: historical versions returned invalid nodes; current versions reject
+// unrepresentable output. Neither outcome is asserted as a desired test result.
 // Build first, then run: node test/repro-legacy-mark-validation.mjs
 import {createRequire} from 'node:module'
 const require = createRequire(import.meta.url)

@@ -17,8 +17,9 @@
       <button id="next" type="button">Next change</button>
       <p id="status" role="status" aria-live="polite"></p>
     </section>
-    <p class="scope"><strong>Metadata only.</strong> Both documents must have identical text and structure.
-      Text or structural edits are rejected. Positions use ProseMirror UTF-16 offsets, not visual character counts.
+    <p id="comparison-scope" class="scope" aria-live="polite"></p>
+    <p><strong>Metadata only within the comparison scope.</strong>
+      Positions use ProseMirror UTF-16 offsets, not visual character counts.
       These fixed examples are not a general document renderer or an accept/reject editor.</p>
     <p id="error" role="alert" hidden></p>
     <div class="documents">

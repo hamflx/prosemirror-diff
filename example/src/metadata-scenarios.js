@@ -1,4 +1,5 @@
 import {Schema} from 'prosemirror-model'
+import {compareDocumentMetadata, compareNodeMetadata} from '../../src/metadata.js'
 
 // Small, explicit fixture schema: no diffMark or editor instance is required.
 export const schema = new Schema({
@@ -22,16 +23,35 @@ const link = updated => paragraph([text('Read the '), text('project notes', [sch
   href: updated ? 'https://example.org/notes/revised' : 'https://example.org/notes/original'
 })]), text('.')])
 const pair = (id, title, build) => ({id, title, oldDoc: document(build(false)), newDoc: document(build(true))})
+const selectedParagraph = updated => paragraph([
+  text('Review '), text('these notes', updated ? [schema.mark('strong')] : []),
+  text(' at '), text('project notes', [schema.mark('link', {
+    href: updated ? 'https://example.org/notes/revised' : 'https://example.org/notes/original'
+  })]), text('.')
+])
+const oldIntro = paragraph(text('Old intro.'))
+const newIntro = paragraph(text('Updated introduction.'))
 export const scenarios = [
   pair('combined', 'Formatting, link and image', updated => [bold(updated), link(updated), image(updated)]),
   pair('bold', 'Add bold formatting', updated => [bold(updated)]),
   pair('link', 'Change a link target', updated => [link(updated)]),
   pair('image', 'Change image attributes', updated => [image(updated)]),
+  {id: 'selected-node', title: 'Caller-selected paragraph (other edits excluded)',
+    oldDoc: document([oldIntro, selectedParagraph(false), paragraph(text('Pending.'))]),
+    newDoc: document([newIntro, selectedParagraph(true), paragraph(text('Ready for review.'))]),
+    // Explicit fixture correspondence, not inferred from the surrounding edits.
+    scope: {oldIndex: 1, newIndex: 1, oldFrom: oldIntro.nodeSize, newFrom: newIntro.nodeSize}},
   pair('unchanged', 'Identical documents', () => [bold(false)]),
   {id: 'unsupported', title: 'Text edit (outside scope)',
     oldDoc: document([paragraph(text('The text stays the same.'))]),
     newDoc: document([paragraph(text('The text has changed.'))])}
 ]
+
+export function compareScenario(scenario) {
+  if (!scenario.scope) return compareDocumentMetadata(scenario.oldDoc, scenario.newDoc)
+  const {oldIndex, newIndex, oldFrom, newFrom} = scenario.scope
+  return compareNodeMetadata(scenario.oldDoc.child(oldIndex), scenario.newDoc.child(newIndex), {oldFrom, newFrom})
+}
 
 /** Split a text node at event boundaries so each highlighted fragment is exact. */
 export function textSegments(node, start, changes, side) {

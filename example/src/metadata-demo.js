@@ -1,5 +1,4 @@
-import {compareDocumentMetadata} from '../../src/metadata.js'
-import {scenarios, textSegments, rangeMatches} from './metadata-scenarios.js'
+import {scenarios, compareScenario, textSegments, rangeMatches} from './metadata-scenarios.js'
 import './metadata-demo.css'
 
 const byId = id => document.getElementById(id)
@@ -81,8 +80,17 @@ function load() {
   const error = byId('error')
   error.hidden = true
   error.textContent = ''
+  const scope = byId('comparison-scope')
+  scope.classList.toggle('selected-scope', Boolean(scenario.scope))
+  if (scenario.scope) {
+    const {oldIndex, newIndex, oldFrom, newFrom} = scenario.scope
+    scope.textContent = `Selected paragraph only. Before [${oldFrom}, ${oldFrom + scenario.oldDoc.child(oldIndex).nodeSize}) / After [${newFrom}, ${newFrom + scenario.newDoc.child(newIndex).nodeSize}). Other text edits are NOT compared. This fixed pair is explicitly chosen by the caller; no automatic matching.`
+  } else {
+    scope.textContent = 'Whole-document metadata comparison. Both documents must have identical text and structure; text or structural edits are rejected.'
+  }
+  byId('changes-title').textContent = scenario.scope ? 'Metadata changes in selected paragraph only' : 'Changes'
   try {
-    changes = compareDocumentMetadata(scenario.oldDoc, scenario.newDoc)
+    changes = compareScenario(scenario)
   } catch (cause) {
     error.textContent = `Comparison unavailable: ${cause.message}`
     error.hidden = false

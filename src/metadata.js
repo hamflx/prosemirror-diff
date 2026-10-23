@@ -50,6 +50,40 @@ export const compareDocumentMetadata = (oldDoc, newDoc) => {
   }
   oldDoc.check()
   newDoc.check()
+  return compareMetadata(oldDoc, newDoc, 0, 0, true)
+}
+
+/**
+ * Compare caller-selected non-text, non-document nodes with identical structure/text.
+ * Offsets identify each node's outer start, not its content start.
+ * @param {Node} oldNode
+ * @param {Node} newNode
+ * @param {{oldFrom?: number, newFrom?: number}} [options]
+ */
+export const compareNodeMetadata = (oldNode, newNode, {oldFrom = 0, newFrom = 0} = {}) => {
+  for (const node of [oldNode, newNode]) {
+    if (!node || !node.type?.schema || typeof node.check !== 'function') {
+      throw new TypeError('Expected ProseMirror nodes')
+    }
+    if (node.isText) throw new TypeError('Direct text nodes are not supported; compare their parent node')
+    if (node.type === node.type.schema.topNodeType) {
+      throw new TypeError('Document roots require compareDocumentMetadata')
+    }
+  }
+  if (oldNode.type.schema !== newNode.type.schema) {
+    throw new TypeError('Nodes must use the same schema instance')
+  }
+  for (const {from, node} of [{from: oldFrom, node: oldNode}, {from: newFrom, node: newNode}]) {
+    if (!Number.isSafeInteger(from) || from < 0 || !Number.isSafeInteger(from + node.nodeSize)) {
+      throw new RangeError('Node ranges must use non-negative safe integer positions without overflow')
+    }
+  }
+  oldNode.check()
+  newNode.check()
+  return compareMetadata(oldNode, newNode, oldFrom, newFrom, false)
+}
+
+const compareMetadata = (oldRoot, newRoot, oldFrom, newFrom, documentRoot) => {
   const changes = []
   const record = (kind, nodeType, oldFrom, oldTo, newFrom, newTo, before, after) => {
     // Snapshot before comparison also rejects cycles and unsupported values.
@@ -104,6 +138,6 @@ export const compareDocumentMetadata = (oldDoc, newDoc) => {
     }
     if (i !== oldNode.childCount || j !== newNode.childCount) incompatible()
   }
-  visit(oldDoc, newDoc, 0, 0, true)
+  visit(oldRoot, newRoot, oldFrom, newFrom, documentRoot)
   return changes
 }

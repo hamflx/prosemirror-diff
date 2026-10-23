@@ -3,7 +3,7 @@ import {DiffType} from '../../src/DiffType.js'
 
 // Example-only adapter: the caller has already selected a block correspondence.
 // It does not pair nodes, support marks/atoms, or expose a public comparison API.
-export function reviewTextChange(change) {
+export function prepareTextChange(change) {
   const unavailable = reason => ({supported: false, reason})
   if (!change || change.kind !== 'replace' || change.before.length !== 1 || change.after.length !== 1) {
     return unavailable('Select a single-block replacement to inspect text.')
@@ -22,6 +22,11 @@ export function reviewTextChange(change) {
   }
   const oldText = oldNode.textContent, newText = newNode.textContent
   const oldStart = change.oldFrom + 1, newStart = change.newFrom + 1
+  return {supported: true, oldText, newText, oldStart, newStart}
+}
+
+// String-only calculation, shared by the example worker and synchronous tests/bench.
+export function calculateTextReview({oldText, newText, oldStart, newStart}) {
   let oldPosition = oldStart, newPosition = newStart, pending
   const hunks = []
   const flush = () => {
@@ -40,4 +45,9 @@ export function reviewTextChange(change) {
   }
   flush()
   return {supported: true, oldText, newText, oldStart, newStart, hunks}
+}
+
+export function reviewTextChange(change) {
+  const prepared = prepareTextChange(change)
+  return prepared.supported ? calculateTextReview(prepared) : prepared
 }

@@ -80,6 +80,7 @@ function renderList() {
 }
 
 function load() {
+  textReview?.dispose()
   const scenario = scenarios.find(item => item.id === select.value)
   entries = []
   buttons.length = 0

@@ -292,6 +292,18 @@ Unicode, empty-text, shifted-nested and unsupported-input fixtures to inspect
 these boundaries. `node bench/text-review.mjs` measures the example helper on
 three preconstructed inputs; it does not measure DOM rendering or claim a speedup.
 
+The browser example checks eligibility and size on the main thread, then sends
+only text strings and offsets to a module worker. Selecting another event or
+reloading the comparison terminates pending work; stale responses cannot change
+the current selection. Completed cached results do not start another worker.
+While calculating, old text details clear and the panel shows a pending state.
+If workers are unavailable or fail, complete block navigation remains usable;
+there is no synchronous calculation fallback. Serve the built example over HTTP
+and retain the emitted worker asset. Worker calculation does not bound DOM
+rendering costs for many detail rows or guarantee whole-page responsiveness.
+The synchronous helper benchmark remains a computation reference, not browser
+response-time evidence. See the [browser measurement record](docs/evolution/2026-10-23-text-responsiveness.md).
+
 ### Read-only metadata review example
 
 The **Caller-selected paragraph** fixture retains two complete documents with

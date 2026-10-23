@@ -231,7 +231,7 @@ const getDiffLevel = options => {
   return level
 }
 
-export const patchDocumentNode = (schema, oldNode, newNode, options = {}) => {
+const patchDocumentNodeUnchecked = (schema, oldNode, newNode, options = {}) => {
   getDiffLevel(options)
   assertNodeTypeEqual(oldNode, newNode)
 
@@ -287,7 +287,7 @@ export const patchDocumentNode = (schema, oldNode, newNode, options = {}) => {
     finalLeftChildren.push(...patchRemainNodes(schema, diffOldChildren, diffNewChildren, options))
   }
 
-  return createNewNode(oldNode, [...finalLeftChildren, ...finalRightChildren])
+  return createNewNodeUnchecked(oldNode, [...finalLeftChildren, ...finalRightChildren])
 }
 
 const matchNodes = (schema, oldChildren, newChildren) => {
@@ -336,7 +336,7 @@ const patchRemainNodes = (schema, oldChildren, newChildren, options = {}) => {
     let updateLeft = !isTextNode(leftOldNode) && matchNodeType(leftOldNode, leftNewNode)
     let updateRight = !isTextNode(rightOldNode) && matchNodeType(rightOldNode, rightNewNode)
     if (Array.isArray(leftOldNode) && Array.isArray(leftNewNode)) {
-      finalLeftChildren.push(...patchTextNodes(schema, leftOldNode, leftNewNode, options))
+      finalLeftChildren.push(...patchTextNodesUnchecked(schema, leftOldNode, leftNewNode, options))
       left += 1
       continue
     }
@@ -351,16 +351,16 @@ const patchRemainNodes = (schema, oldChildren, newChildren, options = {}) => {
       }
     }
     if (updateLeft) {
-      finalLeftChildren.push(patchDocumentNode(schema, leftOldNode, leftNewNode, options))
+      finalLeftChildren.push(patchDocumentNodeUnchecked(schema, leftOldNode, leftNewNode, options))
       left += 1
     } else if (updateRight) {
-      finalRightChildren.unshift(patchDocumentNode(schema, rightOldNode, rightNewNode, options))
+      finalRightChildren.unshift(patchDocumentNodeUnchecked(schema, rightOldNode, rightNewNode, options))
       right += 1
     } else {
       // Normalized text runs are arrays, while inline leaves are single nodes.
       // Expand either side before recursively marking a structural replacement.
-      finalLeftChildren.push(...ensureArray(leftOldNode).map(node => createDiffNode(schema, node, DiffType.Deleted, level)))
-      finalLeftChildren.push(...ensureArray(leftNewNode).map(node => createDiffNode(schema, node, DiffType.Inserted, level)))
+      finalLeftChildren.push(...ensureArray(leftOldNode).map(node => createDiffNodeUnchecked(schema, node, DiffType.Deleted, level)))
+      finalLeftChildren.push(...ensureArray(leftNewNode).map(node => createDiffNodeUnchecked(schema, node, DiffType.Inserted, level)))
       left += 1
       // delete and insert
     }
@@ -369,17 +369,17 @@ const patchRemainNodes = (schema, oldChildren, newChildren, options = {}) => {
   const deleteNodeLen = oldChildLen - left - right
   const insertNodeLen = newChildLen - left - right
   if (deleteNodeLen) {
-    finalLeftChildren.push(...oldChildren.slice(left, left + deleteNodeLen).flat().map(node => createDiffNode(schema, node, DiffType.Deleted, level)))
+    finalLeftChildren.push(...oldChildren.slice(left, left + deleteNodeLen).flat().map(node => createDiffNodeUnchecked(schema, node, DiffType.Deleted, level)))
   }
 
   if (insertNodeLen) {
-    finalRightChildren.unshift(...newChildren.slice(left, left + insertNodeLen).flat().map(node => createDiffNode(schema, node, DiffType.Inserted, level)))
+    finalRightChildren.unshift(...newChildren.slice(left, left + insertNodeLen).flat().map(node => createDiffNodeUnchecked(schema, node, DiffType.Inserted, level)))
   }
 
   return [...finalLeftChildren, ...finalRightChildren]
 }
 
-export const patchTextNodes = (schema, oldNode, newNode, options = {}) => {
+const patchTextNodesUnchecked = (schema, oldNode, newNode, options = {}) => {
   const level = getDiffLevel(options)
   const oldText = oldNode.map(n => getNodeText(n)).join('')
   const newText = newNode.map(n => getNodeText(n)).join('')
@@ -394,7 +394,7 @@ export const patchTextNodes = (schema, oldNode, newNode, options = {}) => {
     const type = Array.isArray(d) ? d[0] : d.type
     const content = Array.isArray(d) ? d[1] : d.text
     const segmentLevel = Array.isArray(d) ? 'char' : d.level
-    const node = createTextNode(schema, content, type !== DiffType.Unchanged ? createDiffMark(schema, type, segmentLevel) : [])
+    const node = createTextNodeUnchecked(schema, content, type !== DiffType.Unchanged ? createDiffMark(schema, type, segmentLevel) : [])
     const oldFrom = oldLen
     const oldTo = oldFrom + (type === DiffType.Inserted ? 0 : content.length)
     const newFrom = newLen
@@ -443,14 +443,14 @@ const applyTextNodeAttrsMarks = (schema, node, base, textItems) => {
   const nodeEnd = base + nodeText.length
   const result = []
   if (firstItem.from - base > 0) {
-    result.push(createTextNode(schema, nodeText.slice(0, firstItem.from - base), baseMarks))
+    result.push(createTextNodeUnchecked(schema, nodeText.slice(0, firstItem.from - base), baseMarks))
   }
   for (let i = 0; i < textItems.length; i++) {
     const {from, node: textNode, to} = textItems[i]
-    result.push(createTextNode(schema, nodeText.slice(Math.max(from, base) - base, to - base), [...baseMarks, ...(textNode.marks ?? [])]))
+    result.push(createTextNodeUnchecked(schema, nodeText.slice(Math.max(from, base) - base, to - base), [...baseMarks, ...(textNode.marks ?? [])]))
     const nextFrom = i + 1 < textItems.length ? textItems[i + 1].from : nodeEnd
     if (nextFrom > to) {
-      result.push(createTextNode(schema, nodeText.slice(to - base, nextFrom - base), baseMarks))
+      result.push(createTextNodeUnchecked(schema, nodeText.slice(to - base, nextFrom - base), baseMarks))
     }
   }
   return result
@@ -559,16 +559,16 @@ export const matchNodeType = (node1, node2) => node1.type?.name === node2.type?.
  * @param {Node} oldNode
  * @param {Node[]} children
  */
-export const createNewNode = (oldNode, children) => {
+const createNewNodeUnchecked = (oldNode, children) => {
   if (!oldNode.type) {
     throw new Error('oldNode.type is undefined')
   }
   return oldNode.copy(Fragment.fromArray(children))
 }
-export const createDiffNode = (schema, node, type, level = 'char') => {
+const createDiffNodeUnchecked = (schema, node, type, level = 'char') => {
   return mapDocumentNode(node, node => {
     if (isTextNode(node)) {
-      return createTextNode(schema, getNodeText(node), [...(node.marks || []), createDiffMark(schema, type, level)])
+      return createTextNodeUnchecked(schema, getNodeText(node), [...(node.marks || []), createDiffMark(schema, type, level)])
     }
     return node
   })
@@ -589,9 +589,52 @@ export const createDiffMark = (schema, type, level = 'char') => {
   }
   throw new Error('type is not valid')
 }
-export const createTextNode = (schema, content, marks = []) => {
+const createTextNodeUnchecked = (schema, content, marks = []) => {
   return schema.text(content, marks)
 }
+
+// Full recursive checks belong at public boundaries, never at each internal layer.
+// Node.check checks content and mark sets; it does not validate arbitrary attrs.
+const checkedNode = (node, phase) => {
+  try { node.check() } catch (error) {
+    if (!(error instanceof RangeError)) throw error
+    throw new RangeError(phase + ': ' + error.message, {cause: error})
+  }
+  return node
+}
+const inputNode = node => checkedNode(node, 'Invalid input node')
+const outputNode = node => checkedNode(node, 'Diff output cannot be represented in the original schema')
+
+export const patchDocumentNode = (schema, oldNode, newNode, options = {}) => {
+  getDiffLevel(options)
+  inputNode(oldNode)
+  inputNode(newNode)
+  return outputNode(patchDocumentNodeUnchecked(schema, oldNode, newNode, options))
+}
+
+export const patchTextNodes = (schema, oldNodes, newNodes, options = {}) => {
+  getDiffLevel(options)
+  oldNodes.forEach(inputNode)
+  newNodes.forEach(inputNode)
+  return patchTextNodesUnchecked(schema, oldNodes, newNodes, options).map(outputNode)
+}
+
+export const createDiffNode = (schema, node, type, level = 'char') => {
+  inputNode(node)
+  return outputNode(createDiffNodeUnchecked(schema, node, type, level))
+}
+
+/** @param {Node} oldNode @param {Node[]} children */
+export const createNewNode = (oldNode, children) => {
+  if (!oldNode.type) throw new Error('oldNode.type is undefined')
+  // Replaced content may be an invalid placeholder; only the completed copy
+  // needs to be valid. Keep this helper useful for repairing that content.
+  return outputNode(createNewNodeUnchecked(oldNode, children))
+}
+
+// With no parent context, only the returned text node's own mark set is checked.
+export const createTextNode = (schema, content, marks = []) =>
+  outputNode(createTextNodeUnchecked(schema, content, marks))
 
 export const diffEditor = (schema, oldDoc, newDoc, options = {}) => {
   getDiffLevel(options)

@@ -48,6 +48,23 @@
         Previous/Next visits parents before their children. Each detail layer reports its own precision.</p>
       <ol id="changes"></ol>
     </section>
+    <section aria-labelledby="text-title">
+      <h2 id="text-title">Selected block: text details</h2>
+      <p id="text-owner"></p>
+      <p>Informational grapheme-boundary details for a single plain textblock replacement with matching markup.
+        Parent block events remain complete; these details are not extra edits to apply.
+        Text marks and inline atoms are unsupported.</p>
+      <p id="text-precision">The text algorithm may return a coarse replacement; its fallback status is not exposed.
+        These are not guaranteed minimal edits. The alignment cell budget does not control text comparison.
+        Text is compared only for the selected block, up to 20,000 combined UTF-16 positions.
+        This example limit is not a time guarantee; segmentation and validation have no whole-call deadline.</p>
+      <div class="controls" aria-label="Selected text detail navigation">
+        <button id="text-previous" type="button" disabled>Previous text detail</button>
+        <button id="text-next" type="button" disabled>Next text detail</button>
+      </div>
+      <p id="text-status" role="status" aria-live="polite"></p>
+      <ol id="text-changes"></ol>
+    </section>
     <footer>This fixed-schema example is not an editor, patch or accept/reject workflow.</footer>
   </main>
   <script type="module" src="/src/blocks-demo.js"></script>

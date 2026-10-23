@@ -274,6 +274,24 @@ with zero cells. This fixed-schema renderer is not arbitrary-document support,
 move detection, nested inline diffing, or an accept/reject editor. The existing
 metadata and legacy Vue editor examples retain their separate entries/builds.
 
+The selected-block text panel adapts the existing `diffGraphemes` output inside
+this example, without adding a public API. A single non-atom textblock
+replacement with matching markup and only unmarked text children can be
+refined. The panel rejects marks and inline nodes rather than silently dropping
+them. Its separate text navigation highlights original UTF-16 ranges, including
+inline markers for empty ranges; complete block events remain selectable.
+Nested old/new offsets are calculated independently. Source Unicode is not
+normalized, and parent/text details must not be applied as separate edits.
+
+Only the selected block is compared, with cached results until the comparison
+changes. A combined 20,000 UTF-16-position limit bounds this example's input;
+it is not a time guarantee. The grapheme algorithm can return coarse replacements
+without exposing fallback status, so these are not guaranteed minimal edits.
+The block alignment cell budget does not control text comparison. Use the
+Unicode, empty-text, shifted-nested and unsupported-input fixtures to inspect
+these boundaries. `node bench/text-review.mjs` measures the example helper on
+three preconstructed inputs; it does not measure DOM rendering or claim a speedup.
+
 ### Read-only metadata review example
 
 The **Caller-selected paragraph** fixture retains two complete documents with

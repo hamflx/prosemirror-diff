@@ -1,6 +1,7 @@
 import {compareDocumentBlocks} from '../../src/blocks.js'
 import {scenarios} from './blocks-scenarios.js'
 import {element, renderDocument, boundaryKey, changeEntries} from './blocks-view.js'
+import {createTextReview} from './text-review-view.js'
 import './blocks-demo.css'
 
 const byId = id => document.getElementById(id)
@@ -10,6 +11,7 @@ const views = {}
 const buttons = []
 let entries = []
 let selected = -1
+let textReview
 
 function activate(index, scroll = false) {
   selected = index >= 0 && index < entries.length ? index : -1
@@ -42,6 +44,7 @@ function activate(index, scroll = false) {
   byId('status').textContent = entry
     ? `Change ${selected + 1} of ${entries.length} · item ${entry.label} · ${change.kind} · located on both sides`
     : 'No block changes'
+  textReview.select(entry, views)
 }
 
 function renderList() {
@@ -107,6 +110,7 @@ function load() {
   ].join(' ')
   views.old = renderDocument(scenario.oldDoc, byId('before'))
   views.new = renderDocument(scenario.newDoc, byId('after'))
+  textReview = createTextReview()
   renderList()
   activate(entries.length ? 0 : -1)
   if (!result) byId('status').textContent = 'Comparison unavailable · no change list'

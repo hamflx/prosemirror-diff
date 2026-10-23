@@ -32,7 +32,8 @@ export function renderDocument(doc, panel) {
       const label = element('span', `${node.type.name} [${from}, ${to})`)
       label.className = 'block-label'
       block.append(label)
-      targets.push({element: block, from, to, scope})
+      const target = {element: block, from, to, scope}
+      targets.push(target)
       if (node.type.name === 'image') {
         const figure = element('figure')
         const img = element('img')
@@ -51,8 +52,23 @@ export function renderDocument(doc, panel) {
         container.append(content)
         block.append(container)
       } else {
-        const text = element(node.type.name === 'heading' ? 'h3' : 'p', node.textContent || 'Empty paragraph')
-        if (!node.textContent) text.className = 'empty-block'
+        const text = element(node.type.name === 'heading' ? 'h3' : 'p')
+        text.className = 'source-text'
+        target.source = text
+        node.forEach(child => {
+          if (child.isText) {
+            const content = child.marks.some(mark => mark.type.name === 'strong') ? element('strong', child.text) : document.createTextNode(child.text)
+            text.append(content)
+          } else if (child.type.name === 'inline_token') {
+            const token = element('span', `[${child.attrs.label}]`)
+            token.className = 'inline-token'
+            text.append(token)
+          }
+        })
+        if (!node.childCount) {
+          text.classList.add('empty-block')
+          block.append(element('span', 'Empty paragraph'))
+        }
         block.append(text)
       }
       destination.append(block)

@@ -60,7 +60,7 @@ opting in. The default remains the legacy UTF-16 character algorithm.
 
 - Calling `diffEditor` without options preserves the original character-level behavior.
 - Word tokenization preserves every source character and uses `Intl.Segmenter` when available, with a Unicode-aware fallback. Grapheme refinement uses a bundled UAX #29 segmenter in every environment.
-- Diff limits degrade large, dissimilar inputs to coarser replacements instead of corrupting text or blocking indefinitely.
+- Word/grapheme search budgets can degrade large, dissimilar inputs to coarser replacements while preserving text. They are not whole-call deadlines: segmentation, validation, output construction and legacy character mode have no total-time guarantee.
 - Word diff segments can always reconstruct both inputs by excluding insertions for the old text and deletions for the new text.
 - `diffGraphemes` has the same reconstruction property, and segment boundaries
   follow the bundled segmenter's extended grapheme boundaries on each input.
@@ -349,3 +349,5 @@ npm ci
 npm test
 npm run build
 ```
+
+See [composition counterexamples and schema boundaries](docs/evolution/2026-10-23-composition-contracts.md) before combining block, metadata and plain-text results. The record includes reproducible legacy renderer limitations for exclusive marks and mark-disallowing nodes.

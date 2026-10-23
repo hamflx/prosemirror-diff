@@ -2,6 +2,12 @@
 
 Compare two ProseMirror documents and mark inserted and deleted content.
 
+This README describes the current repository revision, including unreleased
+changes. As checked on 2026-10-23, the npm latest release is `0.0.8`; that
+published artifact does not contain the metadata/block APIs, grapheme comparison
+or TypeScript declarations described below. Use a built Git checkout to evaluate
+these capabilities. Repository changes do not automatically publish a new package.
+
 ## Working from a Git checkout
 
 Run `npm ci` and `npm run build` before loading the package entry from a checkout:
@@ -12,9 +18,16 @@ with native Node 24.19.0; this does not establish support for every older Node
 version. The existing module-type warning can still appear because the package
 does not declare `type: "module"`.
 
+To evaluate the built package in another project, run `npm pack --ignore-scripts`
+after building, then install the resulting `.tgz` by its explicit local path,
+for example `npm install /path/to/checkout/hamflx-prosemirror-diff-0.0.8.tgz`.
+The checkout currently retains the `0.0.8` version label; its locally built
+archive is different from the registry's published `0.0.8` artifact. Packing
+locally does not publish it. Record the checkout commit alongside the archive.
+
 ## TypeScript consumers
 
-The package ships `index.d.ts` for every public runtime export, including
+The package built from this checkout includes `index.d.ts` for every public runtime export, including
 discriminated `MetadataChange` records and nested `BlockChange` details. Import
 functions and types from `@hamflx/prosemirror-diff`. TypeScript 5.9.3 strict
 consumers were verified with Bundler and NodeNext resolution. The declaration
@@ -29,8 +42,9 @@ verify Node contracts under Bundler resolution. Installed deep-source imports
 from `node_modules` do not gain types by default: the tested configuration needs
 `allowJs: true` and `maxNodeModuleJsDepth: 2` to resolve the source JSDoc. With
 ProseMirror 1.18.1, source NodeNext still loses Node types to `any`, although
-metadata record shapes are verified. Prefer the declared package root: actual
-tarball consumers passed Bundler and NodeNext with ProseMirror 1.18.1 and 1.25.12.
+metadata record shapes are verified. Prefer the declared package root: locally
+built, unpublished tarball consumers passed Bundler and NodeNext with ProseMirror
+1.18.1 and 1.25.12.
 
 Types describe data shapes, not proof of matching schemas, valid document JSON,
 finite metadata numbers, safe offsets, or representable combined output. All

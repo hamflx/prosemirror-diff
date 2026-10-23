@@ -276,6 +276,14 @@ metadata and legacy Vue editor examples retain their separate entries/builds.
 
 ### Read-only metadata review example
 
+The **Caller-selected paragraph** fixture retains two complete documents with
+different introduction and closing text. Only the explicitly selected middle
+paragraph is passed to `compareNodeMetadata`; its strong/link records use different
+absolute positions on the two sides. The scope banner and list heading state that
+other edits are not compared and the pair is chosen explicitly, not matched
+automatically. Existing whole-document fixtures still use
+`compareDocumentMetadata`, including the rejected text-edit recovery example.
+
 From the repository root, run `npm ci` then `npm run demo:metadata` and open
 `http://127.0.0.1:5173/metadata.html`. Use `npm run build:metadata-demo` to build
 the static example into `example/dist/metadata` (serve that directory over HTTP).

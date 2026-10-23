@@ -1,8 +1,27 @@
 import {describe, it, expect} from 'vitest'
 import {compareDocumentMetadata} from '../src/index.js'
-import {scenarios, schema, textSegments, rangeMatches} from '../example/src/metadata-scenarios.js'
+import {scenarios, schema, compareScenario, textSegments, rangeMatches} from '../example/src/metadata-scenarios.js'
 
 describe('read-only metadata example fixtures', () => {
+  it('retains complete documents but limits records to an explicitly selected pair', () => {
+    const scenario = scenarios.find(item => item.id === 'selected-node')
+    expect(() => compareDocumentMetadata(scenario.oldDoc, scenario.newDoc)).toThrow(RangeError)
+    const before = structuredClone([scenario.oldDoc.toJSON(), scenario.newDoc.toJSON()])
+    const changes = compareScenario(scenario)
+    expect(changes.map(c => [c.kind, c.oldFrom, c.oldTo, c.newFrom, c.newTo])).toEqual([
+      ['marks', 20, 31, 31, 42], ['marks', 35, 48, 46, 59]
+    ])
+    expect(scenario.oldDoc.nodeAt(12)).toBe(scenario.oldDoc.child(1))
+    expect(scenario.newDoc.nodeAt(23)).toBe(scenario.newDoc.child(1))
+    for (const c of changes) {
+      expect(scenario.oldDoc.textBetween(c.oldFrom, c.oldTo)).toBe(scenario.newDoc.textBetween(c.newFrom, c.newTo))
+      expect(c.oldFrom).toBeGreaterThan(12)
+      expect(c.oldTo).toBeLessThan(50)
+      expect(c.newFrom).toBeGreaterThan(23)
+      expect(c.newTo).toBeLessThan(61)
+    }
+    expect([scenario.oldDoc.toJSON(), scenario.newDoc.toJSON()]).toEqual(before)
+  })
   it('locates the combined formatting, link and image changes on both sides', () => {
     const {oldDoc, newDoc} = scenarios[0]
     const changes = compareDocumentMetadata(oldDoc, newDoc)

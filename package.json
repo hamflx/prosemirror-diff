@@ -23,9 +23,10 @@
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "core-js": "^3.49.0",
+    "jsdom": "^27.4.0",
     "rollup": "^4.62.3",
-    "vitest": "^3.2.7",
-    "vite": "^7.3.6"
+    "vite": "^7.3.6",
+    "vitest": "^3.2.7"
   },
   "scripts": {
     "build": "rollup -c rollup.config.mjs",

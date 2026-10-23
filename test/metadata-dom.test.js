@@ -111,6 +111,7 @@ describe('metadata demo DOM integration', () => {
     expect(link.dispatchEvent(click)).toBe(false)
     expect(click.defaultPrevented).toBe(true)
     expect(link.getAttribute('href')).toBe('https://example.org/notes/original')
+    expect(link.title).toBe('https://example.org/notes/original (demo link; ordinary click disabled)')
     // Retained href still allows browser context-menu/middle-button navigation.
   })
 })

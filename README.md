@@ -167,6 +167,25 @@ range query, not an editor transaction, position-mapping or accept/reject engine
 
 ## Development commands
 
+### Read-only block review example
+
+From the repository root, run `npm ci`, then `npm run demo:blocks` and open
+`http://127.0.0.1:5173/blocks.html` (use the port printed by Vite if occupied).
+`npm run build:blocks-demo` builds `example/dist/blocks` for local HTTP serving.
+
+This consumer of `compareDocumentBlocks` keeps both originals separate. Select
+changes or use Previous/Next to locate changed blocks on both sides. An empty
+counterpart range has a visible insertion/deletion point, including position
+zero in an empty document. Block labels expose exact half-open ranges.
+
+Fixtures cover paragraphs, empty blocks, image attributes, a strict single-child
+container and repeated blocks. The budget example switches between default
+alignment and zero cells; a coarse fallback is explicitly labelled and can
+include unchanged blocks. Pure one-sided insertions may need no matrix even
+with zero cells. This fixed-schema renderer is not arbitrary-document support,
+move detection, nested inline diffing, or an accept/reject editor. The existing
+metadata and legacy Vue editor examples retain their separate entries/builds.
+
 ### Read-only metadata review example
 
 From the repository root, run `npm ci` then `npm run demo:metadata` and open

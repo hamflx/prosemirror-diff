@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Block review · ProseMirror Diff</title>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">PROSEMIRROR DIFF / READ-ONLY EXAMPLE</p>
+      <h1>Review structural changes.</h1>
+      <p>Keep both original documents intact. Locate inserted, deleted and replaced blocks in each version.</p>
+    </header>
+    <section class="controls" aria-label="Comparison controls">
+      <label for="scenario">Example</label><select id="scenario"></select>
+      <label for="budget">Alignment budget</label>
+      <select id="budget">
+        <option value="100000">Default: 100,000 cells</option>
+        <option value="0">Zero cells: allow coarse fallback</option>
+      </select>
+      <button id="previous" type="button">Previous change</button>
+      <button id="next" type="button">Next change</button>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+    <p id="precision" role="status" aria-live="polite"></p>
+    <p class="scope"><strong>Top-level blocks only.</strong> Nested changes replace the containing block.
+      Repeated blocks have deterministic correspondence, not proven identity or detected moves.
+      The budget bounds the alignment matrix, not total running time. Positions are ProseMirror UTF-16 offsets.</p>
+    <p id="scenario-note"></p>
+    <p id="error" role="alert" hidden></p>
+    <div class="documents">
+      <section aria-labelledby="before-title"><h2 id="before-title">Before</h2><div id="before" class="document"></div></section>
+      <section aria-labelledby="after-title"><h2 id="after-title">After</h2><div id="after" class="document"></div></section>
+    </div>
+    <section aria-labelledby="changes-title">
+      <h2 id="changes-title">Changes</h2>
+      <p>Select a change to highlight its blocks. An empty range is shown as a position marker on the opposite side.</p>
+      <ol id="changes"></ol>
+    </section>
+    <footer>This fixed-schema example is not an editor, patch or accept/reject workflow.</footer>
+  </main>
+  <script type="module" src="/src/blocks-demo.js"></script>
+</body>
+</html>

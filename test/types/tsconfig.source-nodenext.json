@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.source.json","compilerOptions":{"module":"NodeNext","moduleResolution":"NodeNext"},"files":["source.ts"]}

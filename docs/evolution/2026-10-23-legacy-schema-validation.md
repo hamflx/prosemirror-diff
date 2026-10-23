@@ -23,9 +23,12 @@ the original `RangeError` is retained as `cause`. Non-validation exceptions are
 not swallowed. Existing decoding, option and construction errors retain their
 existing behavior.
 
-The installed ProseMirror check recursively validates content expressions and
-mark sets. It does not validate arbitrary attribute values, establish provenance,
-or promise bounded execution time. No broader attribute-validation claim is made.
+The original ProseMirror 1.18.1 check recursively validates content expressions
+and mark sets, without validating arbitrary attribute values. Newer versions
+may run schema-defined attribute validators during checks or construction. The
+library delegates to the installed version's behavior and does not guarantee a
+fixed error phase. This is not general-purpose JSON validation, proof of
+provenance, or a promise of bounded execution time.
 
 ## Public helper boundaries and compatibility
 

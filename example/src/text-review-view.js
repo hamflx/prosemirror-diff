@@ -1,13 +1,25 @@
-import {reviewTextChange} from './text-review.js'
+import {prepareTextChange} from './text-review.js'
 import {element} from './blocks-view.js'
 
 // Only the selected block is compared. A fresh controller owns one result's cache.
-export function createTextReview() {
+export function createTextReview({workerFactory = () => new Worker(new URL('./text-review-worker.js', import.meta.url), {type: 'module'})} = {}) {
   const byId = id => document.getElementById(id)
   const list = byId('text-changes'), status = byId('text-status')
   const previous = byId('text-previous'), next = byId('text-next')
   const cache = new Map()
   let review, selected = -1, originals = [], buttons = []
+  let worker, requestId = 0, disposed = false
+
+  function stopWorker() {
+    worker?.terminate()
+    worker = undefined
+  }
+
+  function unavailable() {
+    stopWorker()
+    status.dataset.state = 'unavailable'
+    status.textContent = 'Text details are unavailable. The complete block event remains available.'
+  }
 
   function restore() {
     for (const {target, text} of originals) target.textContent = text
@@ -42,7 +54,23 @@ export function createTextReview() {
   next.onclick = () => activate(selected + 1, true)
 
   return {
+    dispose() {
+      disposed = true
+      requestId++
+      stopWorker()
+      restore()
+      originals = []
+      buttons = []
+      review = undefined
+      list.replaceChildren()
+      previous.disabled = next.disabled = true
+      status.dataset.state = 'idle'
+      status.textContent = 'No selected block event'
+    },
     select(entry, views) {
+      if (disposed) return
+      const currentId = ++requestId
+      stopWorker()
       restore()
       originals = []
       buttons = []
@@ -51,28 +79,59 @@ export function createTextReview() {
       list.replaceChildren()
       previous.disabled = next.disabled = true
       byId('text-owner').textContent = entry ? `Selected block event ${entry.label}` : 'No selected block event'
-      if (!cache.has(entry)) cache.set(entry, reviewTextChange(entry?.change))
-      const result = cache.get(entry)
-      if (!result.supported) {
-        status.textContent = result.reason
+      const prepared = prepareTextChange(entry?.change)
+      if (!prepared.supported) {
+        status.dataset.state = 'unsupported'
+        status.textContent = prepared.reason
         return
       }
-      review = result
-      for (const side of ['old', 'new']) {
-        const target = views[side].targets.find(target => target.scope === entry.scopes[side] && target.from === entry.change[`${side}From`])
-        originals.push({target: target.source, text: review[`${side}Text`], side})
+      const display = result => {
+        review = result
+        for (const side of ['old', 'new']) {
+          const target = views[side].targets.find(target => target.scope === entry.scopes[side] && target.from === entry.change[`${side}From`])
+          originals.push({target: target.source, text: review[`${side}Text`], side})
+        }
+        review.hunks.forEach((hunk, index) => {
+          const item = element('li')
+          const button = element('button', `${index + 1}. ${hunk.kind}: Before [${hunk.oldFrom}, ${hunk.oldTo}), After [${hunk.newFrom}, ${hunk.newTo})`)
+          button.type = 'button'
+          button.addEventListener('click', () => activate(index, true))
+          buttons.push(button)
+          item.append(button)
+          list.append(item)
+        })
+        status.textContent = 'No text changes in the selected block.'
+        activate(review.hunks.length ? 0 : -1)
+        status.dataset.state = 'ready'
       }
-      review.hunks.forEach((hunk, index) => {
-        const item = element('li')
-        const button = element('button', `${index + 1}. ${hunk.kind}: Before [${hunk.oldFrom}, ${hunk.oldTo}), After [${hunk.newFrom}, ${hunk.newTo})`)
-        button.type = 'button'
-        button.addEventListener('click', () => activate(index, true))
-        buttons.push(button)
-        item.append(button)
-        list.append(item)
-      })
-      status.textContent = 'No text changes in the selected block.'
-      activate(review.hunks.length ? 0 : -1)
+      if (cache.has(entry)) {
+        display(cache.get(entry))
+        return
+      }
+      status.dataset.state = 'pending'
+      status.textContent = 'Preparing text details…'
+      try {
+        const currentWorker = workerFactory()
+        worker = currentWorker
+        const current = () => !disposed && requestId === currentId && worker === currentWorker
+        currentWorker.onmessage = ({data}) => {
+          if (!current() || data?.requestId !== currentId) return
+          if (data.error || !Array.isArray(data.result?.hunks)) { unavailable(); return }
+          stopWorker()
+          cache.set(entry, data.result)
+          display(data.result)
+        }
+        currentWorker.onerror = event => {
+          if (!current()) return
+          event.preventDefault?.()
+          unavailable()
+        }
+        currentWorker.onmessageerror = () => { if (current()) unavailable() }
+        const {oldText, newText, oldStart, newStart} = prepared
+        currentWorker.postMessage({requestId: currentId, oldText, newText, oldStart, newStart})
+      } catch {
+        unavailable()
+      }
     }
   }
 }

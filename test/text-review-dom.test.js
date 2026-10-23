@@ -15,6 +15,13 @@ let diffSpy
 beforeEach(async () => {
   vi.resetModules()
   diffSpy = vi.spyOn(await import('../src/diff.js'), 'diffGraphemes')
+  const {calculateTextReview} = await import('../example/src/text-review.js')
+  // These range/render tests use an immediate deterministic worker double.
+  // Deferred delivery, cancellation and failures have a separate lifecycle suite.
+  vi.stubGlobal('Worker', class {
+    postMessage(data) { this.onmessage({data: {requestId: data.requestId, result: calculateTextReview(data)}}) }
+    terminate() {}
+  })
   originalScroll = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView')
   Object.defineProperty(Element.prototype, 'scrollIntoView', {configurable: true, value: vi.fn()})
   document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML
@@ -22,6 +29,7 @@ beforeEach(async () => {
 })
 afterEach(() => {
   diffSpy.mockRestore()
+  vi.unstubAllGlobals()
   if (originalScroll) Object.defineProperty(Element.prototype, 'scrollIntoView', originalScroll)
   else delete Element.prototype.scrollIntoView
   document.body.replaceChildren()

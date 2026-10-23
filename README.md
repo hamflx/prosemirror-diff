@@ -321,6 +321,13 @@ reports the actual result. Source documents and complete parent events remain
 intact. See the [pagination investigation](docs/evolution/2026-10-23-text-pagination.md)
 for the isolated DOM-scale experiment and its measurement limits.
 
+Text selection reuses original source formatting DOM and decorates only intersecting
+text leaves. Restoring a selection restores the original nodes. Empty points remain
+outside marks; an internal point splits only its containing run temporarily. Cache
+validation and range lookup still scan the original runs, and initial rendering,
+large highlights and visible attribute descriptions can remain expensive. See the
+[incremental highlight investigation](docs/evolution/2026-10-23-incremental-text-highlights.md).
+
 ### Read-only metadata review example
 
 The **Caller-selected paragraph** fixture retains two complete documents with

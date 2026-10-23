@@ -1,8 +1,9 @@
 import {diffGraphemes} from '../../src/diff.js'
 import {DiffType} from '../../src/DiffType.js'
+import {supportedTextMark} from './text-mark-support.js'
 
 // Example-only adapter: the caller has already selected a block correspondence.
-// It does not pair nodes, support marks/atoms, or expose a public comparison API.
+// It does not pair nodes, compare marks/atoms, or expose a public comparison API.
 export function prepareTextChange(change) {
   const unavailable = reason => ({supported: false, reason})
   if (!change || change.kind !== 'replace' || change.before.length !== 1 || change.after.length !== 1) {
@@ -13,9 +14,13 @@ export function prepareTextChange(change) {
     return unavailable('Text details require matching textblock markup and non-atom blocks.')
   }
   for (const node of [oldNode, newNode]) {
-    let plain = true
-    node.forEach(child => { if (!child.isText || child.marks.length) plain = false })
-    if (!plain) return unavailable('Text details do not support text marks, inline atoms or other inline nodes.')
+    let textOnly = true, knownMarks = true
+    node.forEach(child => {
+      if (!child.isText) textOnly = false
+      if (!child.marks.every(supportedTextMark)) knownMarks = false
+    })
+    if (!textOnly) return unavailable('Text details do not support inline atoms or other non-text inline nodes.')
+    if (!knownMarks) return unavailable('Text details do not support unknown marks or mark attributes. Complete block events remain available.')
   }
   if (oldNode.content.size + newNode.content.size > 20000) {
     return unavailable('Text details are limited to 20,000 combined UTF-16 positions. The complete block event remains available.')

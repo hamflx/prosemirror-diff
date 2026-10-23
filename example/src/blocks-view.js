@@ -1,3 +1,5 @@
+import {renderTextSource, renderMarkDescriptions} from './text-source-view.js'
+
 export function element(tag, text) {
   const node = document.createElement(tag)
   if (text !== undefined) node.textContent = text
@@ -55,21 +57,14 @@ export function renderDocument(doc, panel) {
         const text = element(node.type.name === 'heading' ? 'h3' : 'p')
         text.className = 'source-text'
         target.source = text
-        node.forEach(child => {
-          if (child.isText) {
-            const content = child.marks.some(mark => mark.type.name === 'strong') ? element('strong', child.text) : document.createTextNode(child.text)
-            text.append(content)
-          } else if (child.type.name === 'inline_token') {
-            const token = element('span', `[${child.attrs.label}]`)
-            token.className = 'inline-token'
-            text.append(token)
-          }
-        })
+        renderTextSource(text, node)
         if (!node.childCount) {
           text.classList.add('empty-block')
           block.append(element('span', 'Empty paragraph'))
         }
         block.append(text)
+        const descriptions = renderMarkDescriptions(node, from)
+        if (descriptions.childNodes.length) block.append(descriptions)
       }
       destination.append(block)
     })

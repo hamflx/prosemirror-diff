@@ -27,6 +27,10 @@ footer { font-size: 13px; margin-top: 32px; color: #53675d; }
 .text-position-marker { display: inline-block; border-left: 3px dashed #8c5600; height: 1.2em; vertical-align: text-bottom; }
 .inline-token { border: 1px solid #607969; border-radius: 3px; padding: 0 3px; }
 #text-precision { font-size: 14px; color: #53675d; }
+.non-navigating-link { color: #245e8a; text-decoration: underline; }
+.unsupported-mark { border-bottom: 2px dotted #99600c; }
+.mark-descriptions { padding-left: 18px; font-size: 12px; overflow-wrap: anywhere; }
+#text-format-scope { padding: 12px; background: #fff0dc; }
 
 @media (max-width: 650px) {
   .controls { align-items: stretch; }

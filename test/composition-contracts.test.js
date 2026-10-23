@@ -35,11 +35,11 @@ describe('composition counterexamples across independent review contracts', () =
     expect(compareDocumentMetadata(formatting.oldDoc, formatting.newDoc)).toEqual([
       {kind: 'marks', nodeType: 'text', oldFrom: 1, oldTo: 5, newFrom: 1, newTo: 5, before: [], after: [{type: 'strong'}]}
     ])
-    expect(reviewTextChange(event).supported).toBe(false)
+    expect(reviewTextChange(event)).toMatchObject({supported: true, hunks: []})
     const changed = pair(before, p(t('changed', [s.mark('strong')])))
     expect(() => compareDocumentMetadata(changed.oldDoc, changed.newDoc)).toThrow(RangeError)
     expect(() => compareNodeMetadata(before, changed.newDoc.firstChild)).toThrow(RangeError)
-    expect(reviewTextChange(changed.result.changes[0]).supported).toBe(false)
+    expect(reviewTextChange(changed.result.changes[0])).toMatchObject({supported: true, oldText: 'same', newText: 'changed'})
     expect(changed.result.changes[0].after[0]).toBe(changed.newDoc.firstChild)
     preserved(formatting); preserved(changed)
   })
@@ -90,7 +90,7 @@ describe('composition counterexamples across independent review contracts', () =
     expect(old.textContent.slice(1)).toBe(next.textContent)
     expect(() => compareNodeMetadata(old, next)).toThrow(RangeError)
     expect(() => compareDocumentMetadata(input.oldDoc, input.newDoc)).toThrow(RangeError)
-    expect(reviewTextChange(event).supported).toBe(false)
+    expect(reviewTextChange(event)).toMatchObject({supported: true, oldText: 'aa', newText: 'a'})
     expect(event.before[0]).toBe(old)
     expect(event.after[0]).toBe(next)
     expect(old.firstChild.marks.map(mark => mark.type.name)).toEqual(['strong'])
@@ -137,7 +137,7 @@ describe('composition counterexamples across independent review contracts', () =
     preserved(input)
   })
 
-  it('preserves valid exclusive marks in external block events and safely rejects unsupported refinements', () => {
+  it('preserves valid exclusive marks while refining only text correspondence', () => {
     const old = p(t('cat', [s.mark('code')])), next = p(t('cart', [s.mark('code')]))
     const input = pair(old, next), event = input.result.changes[0]
     expect(s.marks.code.spec.excludes).toBe('_')
@@ -147,7 +147,9 @@ describe('composition counterexamples across independent review contracts', () =
     event.before[0].check(); event.after[0].check()
     expect(() => compareDocumentMetadata(input.oldDoc, input.newDoc)).toThrow(RangeError)
     expect(() => compareNodeMetadata(old, next)).toThrow(RangeError)
-    expect(reviewTextChange(event)).toMatchObject({supported: false})
+    expect(reviewTextChange(event)).toMatchObject({supported: true, hunks: [
+      {kind: 'insert', oldFrom: 3, oldTo: 3, newFrom: 3, newTo: 4}
+    ]})
     preserved(input)
   })
 

@@ -51,9 +51,13 @@
     <section aria-labelledby="text-title">
       <h2 id="text-title">Selected block: text details</h2>
       <p id="text-owner"></p>
-      <p>Informational grapheme-boundary details for a single plain textblock replacement with matching markup.
+      <p>Informational grapheme-boundary text details for a single textblock replacement with matching markup.
         Parent block events remain complete; these details are not extra edits to apply.
-        Text marks and inline atoms are unsupported.</p>
+        Strong, emphasis, code and non-navigating link formatting stay visible in each original.
+        Unknown marks and non-text inline content are unsupported.</p>
+      <p id="text-format-scope"><strong>Text correspondence only.</strong> Formatting is not independently compared here.
+        Unchanged text does not mean unchanged marks. For same-text formatting changes, use the metadata comparison example.
+        Repeated text can have ambiguous correspondence; these ranges do not establish identity or actual edit history.</p>
       <p id="text-precision">The text algorithm may return a coarse replacement; its fallback status is not exposed.
         These are not guaranteed minimal edits. The alignment cell budget does not control text comparison.
         Text is compared only for the selected block, up to 20,000 combined UTF-16 positions.

@@ -276,20 +276,26 @@ metadata and legacy Vue editor examples retain their separate entries/builds.
 
 The selected-block text panel adapts the existing `diffGraphemes` output inside
 this example, without adding a public API. A single non-atom textblock
-replacement with matching markup and only unmarked text children can be
-refined. The panel rejects marks and inline nodes rather than silently dropping
-them. Its separate text navigation highlights original UTF-16 ranges, including
+replacement with matching markup and text-only children can be refined, including
+strong, em, code and link marks supported by the fixed example schema. Original
+formatting is preserved independently on each side; text correspondence does not
+independently compare formatting or establish historical character identity.
+Links are non-navigation spans with visible href/title snapshots. Unknown marks,
+unsupported mark attributes and non-text inline nodes are explicitly rejected. Its separate text navigation highlights original UTF-16 ranges, including
 inline markers for empty ranges; complete block events remain selectable.
 Nested old/new offsets are calculated independently. Source Unicode is not
 normalized, and parent/text details must not be applied as separate edits.
 
 Only the selected block is compared, with cached results until the comparison
 changes. A combined 20,000 UTF-16-position limit bounds this example's input;
-it is not a time guarantee. The grapheme algorithm can return coarse replacements
+it is not a time, DOM-size or mark-count guarantee. The grapheme algorithm can return coarse replacements
 without exposing fallback status, so these are not guaranteed minimal edits.
 The block alignment cell budget does not control text comparison. Use the
 Unicode, empty-text, shifted-nested and unsupported-input fixtures to inspect
-these boundaries. `node bench/text-review.mjs` measures the example helper on
+these boundaries. Marked, cross-mark grapheme and formatting-only fixtures are
+described in the [marked text review record](docs/evolution/2026-10-23-marked-text-review.md).
+Same-text formatting differences still use metadata comparison; zero text hunks
+do not mean unchanged formatting. `node bench/text-review.mjs` measures the example helper on
 three preconstructed inputs; it does not measure DOM rendering or claim a speedup.
 
 The browser example checks eligibility and size on the main thread, then sends

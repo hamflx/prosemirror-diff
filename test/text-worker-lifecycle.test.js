@@ -124,7 +124,7 @@ it('does not create workers for unsupported or oversized inputs and cancels prio
   const review = controller()
   const first = fixture('text-unicode')
   review.select(first.entries[0], first.views)
-  const marked = fixture('text-marks')
+  const marked = fixture('text-inline-atom')
   review.select(marked.entries[0], marked.views)
   expect(workers).toHaveLength(1)
   expect(workers[0].terminate).toHaveBeenCalledOnce()

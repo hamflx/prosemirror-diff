@@ -53,11 +53,12 @@ describe('example-only plain text review adapter', () => {
     const shifted = fixtureChange('text-nested-shifted').details.changes[1]
     expect(reviewTextChange(shifted).hunks[0]).toMatchObject({oldFrom: 16, newFrom: 24, oldTo: 27, newTo: 35})
   })
-  it('rejects mark and atom changes that textContent would silently erase', () => {
+  it('allows known marks as text-only details while rejecting inline atoms', () => {
     for (const id of ['text-marks', 'text-inline-atom']) {
       const event = fixtureChange(id)
       expect(event.before[0].textContent).toBe(event.after[0].textContent)
-      expect(reviewTextChange(event)).toMatchObject({supported: false})
+      if (id === 'text-marks') expect(reviewTextChange(event)).toMatchObject({supported: true, hunks: []})
+      else expect(reviewTextChange(event)).toMatchObject({supported: false})
     }
   })
   it('rejects unsupported node correspondence and inline node types', () => {

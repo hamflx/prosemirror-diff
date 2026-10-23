@@ -1,5 +1,6 @@
 import {prepareTextChange} from './text-review.js'
 import {element} from './blocks-view.js'
+import {renderTextSource} from './text-source-view.js'
 
 // Only the selected block is compared. A fresh controller owns one result's cache.
 export function createTextReview({workerFactory = () => new Worker(new URL('./text-review-worker.js', import.meta.url), {type: 'module'})} = {}) {
@@ -24,7 +25,7 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
   }
 
   function restore() {
-    for (const {target, text} of originals) target.textContent = text
+    for (const {target, node} of originals) renderTextSource(target, node)
   }
 
   function activate(index, scroll = false) {
@@ -36,18 +37,11 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
     next.disabled = selected < 0 || selected >= review.hunks.length - 1
     if (selected < 0) return
     const hunk = review.hunks[selected]
-    for (const {target, text, side} of originals) {
+    for (const {target, node, side} of originals) {
       const start = review[`${side}Start`]
       const from = hunk[`${side}From`], to = hunk[`${side}To`]
-      const highlight = element('span', text.slice(from - start, to - start))
-      highlight.className = from === to ? 'text-position-marker' : 'selected-text-change'
-      Object.assign(highlight.dataset, {from: String(from), to: String(to)})
-      if (from === to) {
-        highlight.setAttribute('role', 'img')
-        highlight.setAttribute('aria-label', `${side === 'old' ? 'Insertion' : 'Deletion'} point at ${from}`)
-      }
-      target.replaceChildren(document.createTextNode(text.slice(0, from - start)), highlight,
-        document.createTextNode(text.slice(to - start)))
+      const highlight = renderTextSource(target, node, {from, to, start,
+        label: `${side === 'old' ? 'Insertion' : 'Deletion'} point at ${from}`})
       if (scroll) highlight.scrollIntoView({block: 'nearest', inline: 'nearest'})
     }
     status.textContent = `Text detail ${selected + 1} of ${review.hunks.length}: ${hunk.kind}. Before [${hunk.oldFrom}, ${hunk.oldTo}), After [${hunk.newFrom}, ${hunk.newTo}).`
@@ -129,9 +123,11 @@ export function createTextReview({workerFactory = () => new Worker(new URL('./te
         review = result
         for (const side of ['old', 'new']) {
           const target = views[side].targets.find(target => target.scope === entry.scopes[side] && target.from === entry.change[`${side}From`])
-          originals.push({target: target.source, text: review[`${side}Text`], side})
+          originals.push({target: target.source, node: entry.change[side === 'old' ? 'before' : 'after'][0], side})
         }
-        status.textContent = 'No text changes in the selected block.'
+        status.textContent = entry.change.before[0].eq(entry.change.after[0])
+          ? 'No text changes in the selected block. Formatting is not independently compared here.'
+          : 'Text unchanged; formatting differs. Use metadata comparison for unchanged text and structure. The complete block event remains.'
         if (!review.hunks.length) pageStatus.textContent = 'Showing 0 of 0 text details. Page 0 of 0.'
         activate(review.hunks.length ? 0 : -1)
         status.dataset.state = 'ready'

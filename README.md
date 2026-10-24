@@ -327,6 +327,16 @@ can therefore have both flags false while a descendant is truncated. The
 top-level `fallback` keeps its previous meaning. Budget and depth are precision
 controls, not a whole-call deadline or protection against arbitrarily deep input.
 
+### Official table schemas
+
+Model validity is not table-grid validity. When consuming `prosemirror-tables`
+documents, check the original models and each table's `TableMap.problems` before
+treating the inputs as valid grids. Nested block details preserve the complete
+table event; row/cell correspondence does not establish identity or a patch.
+See the [official table-model integration and reproduction](docs/evolution/2026-10-24-tables.md)
+for cell text, marks, row insertion, colspan/rowspan and invalid-grid examples.
+The library does not acquire a tables dependency or repair grids automatically.
+
 ## Development commands
 
 ### Read-only block review example

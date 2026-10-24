@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "dependencies": {
+    "diff": "9.0.0",
+    "diff-match-patch": "1.0.5",
+    "prosemirror-model": "1.25.12",
+    "prosemirror-tables": "1.8.5",
+    "unicode-segmenter": "0.17.2",
+    "prosemirror-state": "1.4.4"
+  },
+  "name": "prosemirror-diff-table-contract-runtime",
+  "version": "0.0.0"
+}

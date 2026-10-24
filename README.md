@@ -49,6 +49,12 @@ The two source inventories include unmarked text and literal link attributes.
 They do not identify formatting changes or pair characters across versions;
 selected text coverage remains partial. The default report is unchanged.
 
+To discover event paths in a saved report, use the
+[event directory reader](example/headless/README.md). It lists retained parent
+and nested events with original ranges and precision flags without repeating
+comparison. Directory entries are navigation targets, not independent edit counts
+or stable node IDs.
+
 ## TypeScript consumers
 
 The package built from this checkout includes `index.d.ts` for every public runtime export, including

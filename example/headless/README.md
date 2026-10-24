@@ -108,3 +108,18 @@ Programmatic consumers of this example can pass `{formatting: true}` as the
 fifth argument to `reviewSnapshots`, separate from the fourth block-comparison
 options argument. No selected event returns explicit `not-selected` inventory
 coverage. This is not a new package API or a broader time/memory budget.
+
+### List paths from a saved report
+
+The standalone directory reads an existing UTF-8 JSON report without running comparison, metadata or grapheme algorithms:
+
+```sh
+node -e "const {execFileSync}=require('node:child_process'); require('node:fs').writeFileSync('report.json',execFileSync(process.execPath,['example/headless/cli.mjs','example/headless/old.json','example/headless/new.json']))"
+node example/headless/list-events.mjs report.json
+```
+
+The Node save command writes the original UTF-8 bytes across platforms. Windows PowerShell 5.1 `>` writes UTF-16 and is not suitable here. UTF-8 BOM is accepted. The same directory command accepts reports saved from the official-table CLI; it needs no table runtime or installation.
+
+Entries retain parents and nested paths (`0`, `0.0`, etc.), zero-based depth, kind, each side's original range and node types/count, containing-layer fallback and details availability/count/truncation/fallback. Root equality, fallback and comparison options remain context. These are **not an additive edit count**. Depth-limited details create no invented paths. Empty insert/delete ranges remain positions. A path can be supplied to the original comparison CLI only with the same snapshots and options; it is not node identity.
+
+This checks only the report fields needed for the directory (including ordered ranges and contained child ranges). It does not authenticate a saved report or rerun schema, model, grid or comparison validation. Unused report data is not comprehensively validated. All entries are emitted or the operation fails: limits are 8 MiB UTF-8 input, 10,000 entries and nested depth 32. These are size bounds, not a read timeout, total runtime deadline or malicious-input sandbox. Failure writes stderr and exits nonzero without partial stdout. Output contains no text previews, inferred moves or patches.

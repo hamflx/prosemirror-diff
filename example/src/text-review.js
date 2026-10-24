@@ -5,7 +5,7 @@ import {supportedTextMark} from './text-mark-support.js'
 // Example-only adapter: the caller has already selected a block correspondence.
 // It does not pair nodes, compare marks/atoms, or expose a public comparison API.
 export function prepareTextChange(change) {
-  const unavailable = reason => ({supported: false, reason})
+  const unavailable = reason => ({supported: /** @type {false} */ (false), reason})
   if (!change || change.kind !== 'replace' || change.before.length !== 1 || change.after.length !== 1) {
     return unavailable('Select a single-block replacement to inspect text.')
   }
@@ -27,7 +27,7 @@ export function prepareTextChange(change) {
   }
   const oldText = oldNode.textContent, newText = newNode.textContent
   const oldStart = change.oldFrom + 1, newStart = change.newFrom + 1
-  return {supported: true, oldText, newText, oldStart, newStart}
+  return {supported: /** @type {true} */ (true), oldText, newText, oldStart, newStart}
 }
 
 // String-only calculation, shared by the example worker and synchronous tests/bench.

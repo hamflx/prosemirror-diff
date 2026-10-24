@@ -337,6 +337,12 @@ See the [official table-model integration and reproduction](docs/evolution/2026-
 for cell text, marks, row insertion, colspan/rowspan and invalid-grid examples.
 The library does not acquire a tables dependency or repair grids automatically.
 
+For an executable consumer, see the [table snapshot CLI](example/table-snapshots/README.md).
+It uses a separate, pinned runtime and fixed table schema, validates both original
+grids before comparison, and emits JSON with explicit selected-event coverage.
+Invalid grids fail without a partial report. Its conservative input limits and
+unsupported nested tables are example constraints, not new library guarantees.
+
 ## Development commands
 
 ### Read-only block review example

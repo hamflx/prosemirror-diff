@@ -25,9 +25,12 @@ async function input(path,side) {
 }
 try {
   const args=process.argv.slice(2)
+  const formatting=args.at(-1)==='--formatting'
+  if(formatting) args.pop()
+  if(formatting&&args.length!==3) throw new Error('--formatting requires an explicit event path')
   if(args.length<2||args.length>3) throw new Error('Usage: node cli.mjs BEFORE.json AFTER.json [ZERO_BASED_EVENT_PATH]')
   const before=await input(args[0],'before'),after=await input(args[1],'after')
-  const report=JSON.stringify(reviewTables(before,after,args[2]),null,2)
+  const report=JSON.stringify(reviewTables(before,after,args[2],undefined,{formatting}),null,2)
   process.stdout.write(report+'\n')
 } catch(error) {
   process.stderr.write(JSON.stringify(error instanceof SnapshotError ? error.diagnostic : {problem:{type:'comparison',reason:error.message}})+'\n')

@@ -107,3 +107,28 @@ unequal original offsets, real horizontal/vertical merge commands, invalid grids
 allocation checks before TableMap, unknown data, malformed/oversized files,
 coarse/truncated reports, JSON round trips and unchanged older CLI behavior.
 These are Node consumer checks, not browser/editor or performance acceptance.
+
+## Optional per-side source formatting
+
+After setup, run the mixed table-cell fixture:
+
+```sh
+node logs/table-consumer/example/table-snapshots/cli.mjs example/table-snapshots/formatting-old.json example/table-snapshots/formatting-new.json 1.0.0.0 --formatting
+```
+
+The final `--formatting` flag requires an explicit event path. The inventory is
+available only when the selected event satisfies the same text-adapter contract
+as the [headless source inventory](../headless/README.md#optional-original-formatting-inventory).
+Here it selects the paragraph inside the changed cell, after an unrelated leading
+insertion, so old and new UTF-16 coordinates differ. It lists each side's original
+text runs, including unmarked text and literal link attributes, without pairing
+marks across sides. Mixed changes remain `text-only-partial`; source inventories
+are not mark differences or proof of character identity. Marks may divide a
+single grapheme and keep their own exact original boundaries.
+
+Defaults remain unchanged. With opt-in, `selected.sourceFormatting.coverage`
+is `source-text-runs`, `unsupported`, or `unavailable`, with an explanatory reason.
+Parent events, selected comparison coverage and all table validation/budget
+rules remain in force. For programmatic example use, the fifth `reviewTables`
+argument is `{formatting: true}`; it is separate from block comparison options.
+Re-run setup after changing source so the offline copy includes the shared helper.

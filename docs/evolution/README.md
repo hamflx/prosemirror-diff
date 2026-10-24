@@ -41,3 +41,5 @@ Candidate: [ProseMirror model compatibility matrix](2026-10-23-model-compatibili
 Candidate: [generated contract audit and package availability](2026-10-23-generated-contracts.md).
 
 Candidate: [validated table snapshot consumer](2026-10-24-table-consumer.md).
+
+Candidate: [independent source formatting inventories](2026-10-24-source-formatting.md).

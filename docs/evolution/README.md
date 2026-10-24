@@ -43,3 +43,5 @@ Candidate: [generated contract audit and package availability](2026-10-23-genera
 Candidate: [validated table snapshot consumer](2026-10-24-table-consumer.md).
 
 Candidate: [independent source formatting inventories](2026-10-24-source-formatting.md).
+
+Candidate: [saved-report event discovery](2026-10-24-event-directory.md).

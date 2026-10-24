@@ -167,6 +167,28 @@ try {
     const result=spawnSync(process.execPath,[oldCLI,resolve(root,'example/headless/old.json'),resolve(root,'example/headless/new.json'),'0.0.0'],{encoding:'utf8'})
     assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(result.stdout).selected.coverage,'metadata')
   })
+  test('saved table report directory paths select original cell ranges',()=>{
+    const before=JSON.parse(readFileSync(resolve(root,'example/table-snapshots/formatting-old.json'),'utf8'))
+    const after=JSON.parse(readFileSync(resolve(root,'example/table-snapshots/formatting-new.json'),'utf8'))
+    const result=command(before,after)
+    assert.equal(result.status,0,result.stderr)
+    const file=join(temp,'saved-report.json');writeFileSync(file,result.stdout)
+    const listed=spawnSync(process.execPath,[resolve(root,'example/headless/list-events.mjs'),file],{encoding:'utf8'})
+    assert.equal(listed.status,0,listed.stderr)
+    const directory=JSON.parse(listed.stdout)
+    assert.equal(directory.reportFormat,'official-table-snapshot-review-v1')
+    assert.deepEqual(directory.entries.map(entry=>entry.path),['0','1','1.0','1.0.0','1.0.0.0'])
+    for(const entry of directory.entries){
+      const selected=command(before,after,entry.path)
+      assert.equal(selected.status,0,selected.stderr)
+      const report=JSON.parse(selected.stdout)
+      let layer=report.blocks,event
+      for(const index of report.selected.path){event=layer.changes[index];layer=event.details}
+      assert.deepEqual([entry.old.from,entry.old.to,entry.new.from,entry.new.to],[event.oldFrom,event.oldTo,event.newFrom,event.newTo])
+    }
+    const paragraph=directory.entries.at(-1)
+    assert.equal(paragraph.old.from,11);assert.equal(paragraph.new.from,21)
+  })
   console.log(JSON.stringify({cases:results.length,results},null,2))
 } finally {
   const target=resolve(temp)

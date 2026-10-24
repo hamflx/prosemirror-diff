@@ -1,0 +1,76 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "bullet_list",
+      "content": [
+        {
+          "type": "list_item",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "align": null
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Read "
+                },
+                {
+                  "type": "text",
+                  "text": "é",
+                  "marks": [
+                    {
+                      "type": "strong"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " notes"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": {
+        "align": null
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Unchanged anchor"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "attrs": {
+        "src": "cover-v2.png",
+        "alt": "Cover"
+      }
+    },
+    {
+      "type": "container",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": {
+            "align": null
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "One child only"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

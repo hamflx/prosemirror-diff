@@ -25,6 +25,19 @@ The checkout currently retains the `0.0.8` version label; its locally built
 archive is different from the registry's published `0.0.8` artifact. Packing
 locally does not publish it. Record the checkout commit alongside the archive.
 
+## Saved JSON snapshot review
+
+The [headless consumer example](example/headless/README.md) reads two saved JSON
+snapshots using a fixed schema and emits a complete block tree with precision
+flags. An optional zero-based event path selects metadata or partial text details:
+
+```sh
+node example/headless/cli.mjs example/headless/old.json example/headless/new.json 0.0.0
+```
+
+It requires no DOM/editor and introduces no new library API. See the example's
+schema, coverage and synchronous-computation limits before adapting it.
+
 ## TypeScript consumers
 
 The package built from this checkout includes `index.d.ts` for every public runtime export, including

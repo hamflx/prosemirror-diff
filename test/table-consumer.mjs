@@ -22,9 +22,9 @@ const doc=t=>({type:'doc',content:[p('Before'),t]})
 const basic=()=>table([[cell('A'),cell('B')],[cell('C'),cell('D')]])
 const results=[]
 let fileIndex=0
-function command(before,after,path) {
+function command(before,after,path,formatting=false) {
   const files=[before,after].map(value=>{const file=join(temp,`${fileIndex++}.json`);writeFileSync(file,typeof value==='string'||Buffer.isBuffer(value)?value:JSON.stringify(value));return file})
-  return spawnSync(process.execPath,[cli,...files,...(path===undefined?[]:[path])],{encoding:'utf8',maxBuffer:8*1024*1024})
+  return spawnSync(process.execPath,[cli,...files,...(path===undefined?[]:[path]),...(formatting?['--formatting']:[])],{encoding:'utf8',maxBuffer:8*1024*1024})
 }
 function test(name,fn){fn();results.push({name,status:'pass'})}
 function rejected(before,after,type,side='after',outer=8) {
@@ -131,6 +131,33 @@ try {
     const result=command(doc(basic()),doc(basic()),'99')
     assert.notEqual(result.status,0);assert.equal(result.stdout,'')
     assert.ok(result.stderr.includes('Event path does not exist'))
+  })
+  test('opt-in source inventory for a mixed table cell preserves default report',()=>{
+    const before=JSON.parse(readFileSync(resolve(root,'example/table-snapshots/formatting-old.json'),'utf8'))
+    const after=JSON.parse(readFileSync(resolve(root,'example/table-snapshots/formatting-new.json'),'utf8'))
+    const plain=command(before,after,'1.0.0.0'), opted=command(before,after,'1.0.0.0',true)
+    assert.equal(plain.status,0,plain.stderr);assert.equal(opted.status,0,opted.stderr)
+    const baseline=JSON.parse(plain.stdout),report=JSON.parse(opted.stdout)
+    assert.equal(report.selected.coverage,'text-only-partial')
+    const {sourceFormatting:inventory,...selected}=report.selected
+    assert.deepEqual({...report,selected},baseline)
+    assert.deepEqual(inventory.old.runs[0],{from:12,to:13,text:'e',marks:[]})
+    assert.deepEqual(inventory.old.runs[1],{from:13,to:14,text:'\u0301',marks:[{type:'strong'}]})
+    assert.equal(inventory.new.from,22)
+    assert.equal(inventory.old.runs[2].marks[0].attrs.href,'/old')
+    assert.deepEqual(JSON.parse(JSON.stringify(report)),report)
+    const missing=command(before,after,undefined,true)
+    assert.notEqual(missing.status,0);assert.equal(missing.stdout,'')
+  })
+  test('unsupported atom does not acquire a complete source inventory',()=>{
+    const before=doc(table([[cell('same')]])),after=doc(table([[cell('same')]]))
+    after.content[1].content[0].content[0].content[0].content.push({type:'inline_token',attrs:{label:'new'}})
+    const result=command(before,after,'0.0.0.0',true)
+    assert.equal(result.status,0,result.stderr)
+    const report=JSON.parse(result.stdout)
+    assert.equal(report.selected.coverage,'block-only')
+    assert.equal(report.selected.sourceFormatting.coverage,'unsupported')
+    assert.equal(report.selected.sourceFormatting.old,undefined)
   })
   test('original headless contract survives extraction and CLI still runs',()=>{
     const before={type:'doc',content:[p('old')]},after={type:'doc',content:[p('new')]}

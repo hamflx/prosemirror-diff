@@ -1,6 +1,7 @@
 import {compareDocumentBlocks} from '../../src/blocks.js'
 import {compareNodeMetadata} from '../../src/metadata.js'
 import {reviewTextChange} from '../src/text-review.js'
+import {sourceFormatting} from '../src/source-formatting.js'
 
 export function parseEventPath(value) {
   if (typeof value !== 'string' || !/^(0|[1-9]\d*)(\.(0|[1-9]\d*))*$/.test(value)) {
@@ -57,7 +58,7 @@ export function refineSelected(change) {
 
 // Example helper, not a new library API. Options are useful for reproducible tests;
 // the CLI intentionally fixes depth and cell budget rather than exposing a framework.
-export function reviewDocuments(oldDoc, newDoc, eventPath, options = {maxDepth: 2, maxCells: 100000}) {
+export function reviewDocuments(oldDoc, newDoc, eventPath, options = {maxDepth: 2, maxCells: 100000}, consumerOptions = {formatting: false}) {
   const result = compareDocumentBlocks(oldDoc, newDoc, options)
   const path = eventPath === undefined ? undefined : parseEventPath(eventPath)
   const selected = path ? {path, ...refineSelected(selectEvent(result, path))}
@@ -69,6 +70,8 @@ export function reviewDocuments(oldDoc, newDoc, eventPath, options = {maxDepth: 
     coordinates: 'Half-open original ProseMirror positions; text positions use UTF-16 code units.',
     options: {maxDepth: options.maxDepth ?? 0, maxCells: options.maxCells ?? 100000},
     snapshots: {before: oldDoc.toJSON(), after: newDoc.toJSON()},
-    blocks: serializeLayer(result), selected
+    blocks: serializeLayer(result), selected: consumerOptions.formatting === true ? {...selected, sourceFormatting: path
+      ? sourceFormatting(selectEvent(result, path))
+      : {kind: 'source-inventory', coverage: 'not-selected', reason: 'Select an event before requesting its source formatting inventory.'}} : selected
   }
 }

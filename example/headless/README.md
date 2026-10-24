@@ -69,3 +69,42 @@ and [two-snapshot visualization](https://discuss.prosemirror.net/t/visualize-cha
 These motivate the example, not claims of market size or uniqueness.
 
 Run its focused tests with `npx vitest run test/headless-review.test.js`.
+
+## Optional original formatting inventory
+
+```sh
+node example/headless/cli.mjs example/headless/formatting-old.json example/headless/formatting-new.json 1 --formatting
+```
+
+`--formatting` must be the final argument and requires an explicit event path.
+Without it, the report is unchanged. With it, `selected.sourceFormatting`
+contains an independent inventory of each eligible original paragraph's text
+runs. Each side has its own content `from`/`to` and ordered `runs` containing
+half-open UTF-16 `from`, `to`, original `text`, and detached supported `marks`
+with primitive attributes. Unmarked runs have `marks: []`; an empty original
+has an empty runs array. Boundaries follow the loaded ProseMirror text runs,
+which can differ from raw JSON spelling after normalization.
+
+This is a **source inventory, not a mark diff**. In the mixed fixture, the accent
+has its own mark boundary inside a grapheme. That exact original boundary is
+retained; it is not expanded to match grapheme text differences. Repeated text
+such as `aa` to `a` does not establish which marked character survived. Links and
+formatting are listed independently on both sides, without assigning changes,
+identity, authorship or edit history. Block attributes are outside this list.
+The original `selected.coverage: "text-only-partial"` and text precision warning
+remain unchanged for mixed text/formatting revisions.
+
+The inventory shares the text adapter's admission rules: one selected non-atom
+textblock on each side, matching block markup, text-only children, supported
+strong/em/code/link marks, and at most 20,000 combined UTF-16 positions. Unknown
+marks/attributes, inline atoms and hard breaks do not produce a purportedly
+complete list. `unsupported` includes the admission reason; preparation or
+snapshot errors produce `unavailable` without a partial inventory. Snapshot
+collection copies validated primitive model attributes and does not call custom
+mark serializers. Neither this example helper nor the fixed-schema input reader
+is a security boundary for arbitrary JavaScript objects.
+
+Programmatic consumers of this example can pass `{formatting: true}` as the
+fifth argument to `reviewSnapshots`, separate from the fourth block-comparison
+options argument. No selected event returns explicit `not-selected` inventory
+coverage. This is not a new package API or a broader time/memory budget.

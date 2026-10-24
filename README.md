@@ -38,6 +38,17 @@ node example/headless/cli.mjs example/headless/old.json example/headless/new.jso
 It requires no DOM/editor and introduces no new library API. See the example's
 schema, coverage and synchronous-computation limits before adapting it.
 
+For mixed text and formatting revisions, opt in to independent original
+formatting ranges for the selected paragraph:
+
+```sh
+node example/headless/cli.mjs example/headless/formatting-old.json example/headless/formatting-new.json 1 --formatting
+```
+
+The two source inventories include unmarked text and literal link attributes.
+They do not identify formatting changes or pair characters across versions;
+selected text coverage remains partial. The default report is unchanged.
+
 ## TypeScript consumers
 
 The package built from this checkout includes `index.d.ts` for every public runtime export, including

@@ -13,5 +13,5 @@ execFileSync(process.execPath,[resolve(npm),'ci','--ignore-scripts','--no-audit'
 cpSync(resolve(root,'index.d.ts'),resolve(runtime,'index.d.ts'))
 for(const folder of ['src','example/headless','example/table-snapshots']) cpSync(resolve(root,folder),resolve(runtime,folder),{recursive:true})
 mkdirSync(resolve(runtime,'example/src'),{recursive:true})
-for(const file of ['text-review.js','text-mark-support.js']) cpSync(resolve(root,'example/src',file),resolve(runtime,'example/src',file))
+for(const file of ['text-review.js','text-mark-support.js','source-formatting.js']) cpSync(resolve(root,'example/src',file),resolve(runtime,'example/src',file))
 console.log('Offline CLI ready: '+resolve(runtime,'example/table-snapshots/cli.mjs'))

@@ -41,3 +41,6 @@ footer { font-size: 13px; margin-top: 32px; color: #53675d; }
 .mark-description-controls { display: flex; flex-wrap: wrap; gap: 8px; }
 .mark-description-warning { font-weight: 600; }
 .mark-description-list { padding-left: 18px; }
+
+.selected-metadata-change { outline: 3px dashed #8a4700; outline-offset: 2px; }
+#metadata-changes pre { white-space: pre-wrap; overflow-wrap: anywhere; }

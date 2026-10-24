@@ -2,6 +2,7 @@ import {compareDocumentBlocks} from '../../src/blocks.js'
 import {scenarios} from './blocks-scenarios.js'
 import {element, renderDocument, boundaryKey, changeEntries} from './blocks-view.js'
 import {createTextReview} from './text-review-view.js'
+import {createSelectedReview} from './selected-review.js'
 import './blocks-demo.css'
 
 const byId = id => document.getElementById(id)
@@ -111,7 +112,7 @@ function load() {
   ].join(' ')
   views.old = renderDocument(scenario.oldDoc, byId('before'))
   views.new = renderDocument(scenario.newDoc, byId('after'))
-  textReview = createTextReview()
+  textReview = createSelectedReview(createTextReview())
   renderList()
   activate(entries.length ? 0 : -1)
   if (!result) byId('status').textContent = 'Comparison unavailable · no change list'

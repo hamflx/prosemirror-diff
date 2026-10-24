@@ -28,7 +28,7 @@ afterEach(() => {
 
 describe('block review DOM integration', () => {
   it('locates insertion content and an explicit empty old range', () => {
-    expect(byId('scenario').options).toHaveLength(33)
+    expect(byId('scenario').options).toHaveLength(37)
     expect(byId('changes').children).toHaveLength(1)
     expect(markers('before')).toHaveLength(1)
     expect(markers('before')[0].textContent).toContain('Insertion point at 9')

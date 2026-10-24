@@ -92,15 +92,17 @@ it('refines only the selected nested textblock and clears text state when parent
   expect(byId('text-owner').textContent).toBe('No selected block event')
 })
 
-it('explains same-text formatting changes and still rejects inline atoms', () => {
+it('routes same-text formatting and inline attributes to metadata while preserving source originals', () => {
   choose('scenario', 'text-marks')
   expect(source('after').querySelector('strong').textContent).toBe('Same words')
-  expect(byId('text-status').textContent).toContain('Text unchanged; formatting differs')
+  expect(byId('text-status').textContent).toContain('metadata review is active')
+  expect(byId('metadata-changes').textContent).toContain('strong')
   expect(byId('text-changes').children).toHaveLength(0)
   choose('scenario', 'text-inline-atom')
   expect(source('before').querySelector('.inline-token').textContent).toBe('[old token]')
   expect(source('after').querySelector('.inline-token').textContent).toBe('[new token]')
-  expect(byId('text-status').textContent).toContain('inline atoms')
+  expect(byId('metadata-status').dataset.state).toBe('ready')
+  expect(byId('before').querySelector('.inline-token').classList.contains('selected-metadata-change')).toBe(true)
   expect(highlight('before')).toBeNull()
 })
 

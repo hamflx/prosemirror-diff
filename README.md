@@ -510,3 +510,5 @@ The older Vue editor (`example/src/App.vue`, built with `example/vite.config.js`
 still locks `@hamflx/prosemirror-diff` to `0.0.3` and has no local-source alias. It
 has not been migrated to these new errors; its bare call is not this recipe. No
 Vue/Tiptap dependency upgrade or schema alteration is part of this change.
+
+For explicit annotation mark display policies, see the [headless annotation review example](example/headless/ANNOTATIONS.md). Raw differences are retained.

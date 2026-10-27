@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Table review · ProseMirror Diff</title></head>
+<body><main id="table-review">
+<header><p class="eyebrow">PROSEMIRROR DIFF / READ-ONLY EXAMPLE</p><h1>Review tables without mixing versions.</h1>
+<p>Compare original tables, then locate a complete event in each version.</p></header>
+<section class="controls" aria-label="Comparison controls">
+<label for="scenario">Example</label><select id="scenario"></select>
+<label for="budget">Alignment</label><select id="budget"><option value="100000">Default budget</option><option value="0">Zero cells: coarse fallback</option></select>
+<button id="previous" type="button" disabled>Previous event</button><button id="next" type="button" disabled>Next event</button>
+</section>
+<p id="status" role="status" aria-live="polite"></p><p id="error" role="alert" hidden></p>
+<p class="scope">Fixed official table schema only. Both models and table grids are checked before comparison. Paths belong to this report, not persistent node identities. Parent and nested events overlap intentionally: do not add or apply them as separate edits. Positions are original half-open ProseMirror offsets, not row/column indexes.</p>
+<p>Marks remain visible in each original. This view does not independently classify formatting, infer cell correspondence, detect moves, repair grids, or provide accept/reject edits. Empty boundaries are stated numerically; a highlighted containing table is context only. Column width metadata is retained in raw data, not used for pixel-exact layout.</p>
+<div class="documents">
+<section aria-labelledby="before-title"><h2 id="before-title">Before</h2><p id="before-location" class="location"></p><div id="before" class="document"></div></section>
+<section aria-labelledby="after-title"><h2 id="after-title">After</h2><p id="after-location" class="location"></p><div id="after" class="document"></div></section>
+</div>
+<section aria-labelledby="changes-title"><h2 id="changes-title">Changes</h2><p>Select an event to locate its original ranges. Nested paths are optional details, not proof of cell identity. A coarse event keeps the complete original tables visible.</p><ol id="changes"></ol></section>
+<details><summary>Retained raw report and original snapshots</summary><pre id="raw"></pre></details>
+<footer>Comparison runs in a cancellable Worker. Switching examples discards the previous result. The alignment budget is not a whole-call time or memory guarantee. This small example is not a general document importer.</footer>
+</main><script type="module" src="./src/tables-demo.js"></script></body></html>

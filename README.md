@@ -545,3 +545,7 @@ keyboard pagination, mixed-text worker completion and 390/650px layouts. These
 checks do not establish general schema support or a performance guarantee.
 
 For explicit annotation mark display policies, see the [headless annotation review example](example/headless/ANNOTATIONS.md). Raw differences are retained.
+
+## Table review example
+
+See [the read-only table review](example/table-review/README.md) for original grids, retained event navigation, raw reports and explicit fixed-schema limits. Run npm run demo:tables after npm ci.

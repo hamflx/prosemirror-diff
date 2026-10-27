@@ -9,11 +9,17 @@ export class SnapshotError extends Error {
     this.diagnostic = {side, tableOuter, problem: {type, ...details}}
   }
 }
+// tables 1.8.5 types refer to its newer model Node (including children).
+// Its table NodeSpecs use attrs/content supported by model 1.18.1 at runtime.
+// Keep this compatibility assertion confined to those specs, not the schema or
+// Worker result; table-review-dom exercises their official toDOM with old Nodes.
+const tableSpecs = /** @type {Record<string, import('prosemirror-model').NodeSpec>} */ (
+  /** @type {unknown} */ (tableNodes({tableGroup:'block', cellContent:'paragraph+', cellAttributes:{}})))
 export const schema = new Schema({nodes: {
   doc: {content:'block+'}, paragraph: {group:'block', content:'inline*'},
   text: {group:'inline'}, hard_break: {inline:true, group:'inline'},
   inline_token: {inline:true, group:'inline', atom:true, attrs:{label:{}}},
-  ...tableNodes({tableGroup:'block', cellContent:'paragraph+', cellAttributes:{}})
+  ...tableSpecs
 }, marks: {strong:{}, em:{}, code:{excludes:'_'}, link:{attrs:{href:{},title:{default:null}}}}})
 const attrsByNode = {doc:[], paragraph:[], text:[], hard_break:[], inline_token:['label'],
   table:[], table_row:[], table_cell:['colspan','rowspan','colwidth'], table_header:['colspan','rowspan','colwidth']}

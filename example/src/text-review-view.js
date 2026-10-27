@@ -5,9 +5,12 @@ import {renderTextSource} from './text-source-view.js'
 // Only the selected block is compared. A fresh controller owns one result's cache.
 export function createTextReview({workerFactory = () => new Worker(new URL('./text-review-worker.js', import.meta.url), {type: 'module'})} = {}) {
   const byId = id => document.getElementById(id)
-  const list = byId('text-changes'), status = byId('text-status')
-  const previous = byId('text-previous'), next = byId('text-next')
-  const previousPage = byId('text-page-previous'), nextPage = byId('text-page-next')
+  const list = /** @type {HTMLOListElement} */ (byId('text-changes'))
+  const status = byId('text-status')
+  const previous = /** @type {HTMLButtonElement} */ (byId('text-previous'))
+  const next = /** @type {HTMLButtonElement} */ (byId('text-next'))
+  const previousPage = /** @type {HTMLButtonElement} */ (byId('text-page-previous'))
+  const nextPage = /** @type {HTMLButtonElement} */ (byId('text-page-next'))
   const pageStatus = byId('text-page-status'), pageSize = 50
   const cache = new Map()
   let review, selected = -1, originals = [], buttons = [], page = -1

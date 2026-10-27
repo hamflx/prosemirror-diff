@@ -6,8 +6,12 @@ import {createSelectedReview} from './selected-review.js'
 import './blocks-demo.css'
 
 const byId = id => document.getElementById(id)
-const select = byId('scenario'), budget = byId('budget'), depth = byId('depth')
-const previous = byId('previous'), next = byId('next'), list = byId('changes')
+const select = /** @type {HTMLSelectElement} */ (byId('scenario'))
+const budget = /** @type {HTMLSelectElement} */ (byId('budget'))
+const depth = /** @type {HTMLSelectElement} */ (byId('depth'))
+const previous = /** @type {HTMLButtonElement} */ (byId('previous'))
+const next = /** @type {HTMLButtonElement} */ (byId('next'))
+const list = byId('changes')
 const views = {}
 const buttons = []
 let entries = []

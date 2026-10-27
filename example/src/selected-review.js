@@ -24,9 +24,12 @@ export function selectedMetadata(change) {
 // restore metadata before text, and dispose both before replacing document DOM.
 export function createSelectedReview(textReview) {
   const byId = id => document.getElementById(id)
-  const status = byId('metadata-status'), list = byId('metadata-changes'), pageStatus = byId('metadata-page-status')
-  const previous = byId('metadata-previous'), next = byId('metadata-next')
-  const previousPage = byId('metadata-page-previous'), nextPage = byId('metadata-page-next')
+  const status = byId('metadata-status'), pageStatus = byId('metadata-page-status')
+  const list = /** @type {HTMLOListElement} */ (byId('metadata-changes'))
+  const previous = /** @type {HTMLButtonElement} */ (byId('metadata-previous'))
+  const next = /** @type {HTMLButtonElement} */ (byId('metadata-next'))
+  const previousPage = /** @type {HTMLButtonElement} */ (byId('metadata-page-previous'))
+  const nextPage = /** @type {HTMLButtonElement} */ (byId('metadata-page-next'))
   let records = [], locations = [], restored = [], decorated = [], index = -1, page = -1, disposed = false
   const controls = [previous, next, previousPage, nextPage]
   function restore() {

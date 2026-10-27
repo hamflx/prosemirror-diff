@@ -25,6 +25,36 @@ The checkout currently retains the `0.0.8` version label; its locally built
 archive is different from the registry's published `0.0.8` artifact. Packing
 locally does not publish it. Record the checkout commit alongside the archive.
 
+## Saved JSON snapshot review
+
+The [headless consumer example](example/headless/README.md) reads two saved JSON
+snapshots using a fixed schema and emits a complete block tree with precision
+flags. An optional zero-based event path selects metadata or partial text details:
+
+```sh
+node example/headless/cli.mjs example/headless/old.json example/headless/new.json 0.0.0
+```
+
+It requires no DOM/editor and introduces no new library API. See the example's
+schema, coverage and synchronous-computation limits before adapting it.
+
+For mixed text and formatting revisions, opt in to independent original
+formatting ranges for the selected paragraph:
+
+```sh
+node example/headless/cli.mjs example/headless/formatting-old.json example/headless/formatting-new.json 1 --formatting
+```
+
+The two source inventories include unmarked text and literal link attributes.
+They do not identify formatting changes or pair characters across versions;
+selected text coverage remains partial. The default report is unchanged.
+
+To discover event paths in a saved report, use the
+[event directory reader](example/headless/README.md). It lists retained parent
+and nested events with original ranges and precision flags without repeating
+comparison. Directory entries are navigation targets, not independent edit counts
+or stable node IDs.
+
 ## TypeScript consumers
 
 The package built from this checkout includes `index.d.ts` for every public runtime export, including
@@ -314,6 +344,22 @@ can therefore have both flags false while a descendant is truncated. The
 top-level `fallback` keeps its previous meaning. Budget and depth are precision
 controls, not a whole-call deadline or protection against arbitrarily deep input.
 
+### Official table schemas
+
+Model validity is not table-grid validity. When consuming `prosemirror-tables`
+documents, check the original models and each table's `TableMap.problems` before
+treating the inputs as valid grids. Nested block details preserve the complete
+table event; row/cell correspondence does not establish identity or a patch.
+See the [official table-model integration and reproduction](docs/evolution/2026-10-24-tables.md)
+for cell text, marks, row insertion, colspan/rowspan and invalid-grid examples.
+The library does not acquire a tables dependency or repair grids automatically.
+
+For an executable consumer, see the [table snapshot CLI](example/table-snapshots/README.md).
+It uses a separate, pinned runtime and fixed table schema, validates both original
+grids before comparison, and emits JSON with explicit selected-event coverage.
+Invalid grids fail without a partial report. Its conservative input limits and
+unsupported nested tables are example constraints, not new library guarantees.
+
 ## Development commands
 
 ### Read-only block review example
@@ -494,5 +540,8 @@ One selection coordinator cancels/restores text work before metadata selection
 and restores metadata before text work. Metadata selection starts no text worker;
 late worker responses cannot replace the active metadata highlight. Reload and
 dispose clear both modes. No accept/reject, move identity, or mixed-document
-construction is introduced. Production-browser interaction validation for this
-integration remains pending; jsdom tests alone are not browser acceptance.
+construction is introduced. Production-browser checks cover metadata selection,
+keyboard pagination, mixed-text worker completion and 390/650px layouts. These
+checks do not establish general schema support or a performance guarantee.
+
+For explicit annotation mark display policies, see the [headless annotation review example](example/headless/ANNOTATIONS.md). Raw differences are retained.

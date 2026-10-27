@@ -548,4 +548,4 @@ For explicit annotation mark display policies, see the [headless annotation revi
 
 ## Table review example
 
-See [the read-only table review](example/table-review/README.md) for original grids, retained event navigation, raw reports and explicit fixed-schema limits. Run npm run demo:tables after npm ci.
+See [the read-only table review](example/table-review/README.md) for original grids, retained event navigation, raw reports and explicit fixed-schema limits. Run `npm ci`, then `npm run demo:tables` from the repository root and open **`/tables.html` on Vite's printed local address**. The root `/` is the separate older Vue example. The linked guide includes production preview steps.

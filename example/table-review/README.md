@@ -1,7 +1,28 @@
 # Read-only table review
 
-Run `npm ci`, then `npm run demo:tables`. For a production preview run
-`npm run build:tables-demo` and serve `example/dist/tables` over HTTP. The
+From the repository root run:
+
+```sh
+npm ci
+npm run demo:tables
+```
+
+Open **`/tables.html` on the local address printed by Vite**, for example
+`http://127.0.0.1:5173/tables.html`. Use the printed port if 5173 is occupied.
+The root `/` belongs to the older Vue example and is not this demo's entry.
+The table example does not require installing the separate Vue example package.
+
+For a production preview run:
+
+```sh
+npm run build:tables-demo
+npm exec -- vite preview --config example/vite.tables.config.mjs --host 127.0.0.1
+```
+
+Again open **`/tables.html` on the preview address**, usually
+`http://127.0.0.1:4173/tables.html`. Alternatively serve `example/dist/tables`
+over HTTP and open its `tables.html`; do not use a `file://` URL for the Worker.
+The
 `prosemirror-tables` dependency is development-only; the library API and its
 production dependency range are unchanged.
 

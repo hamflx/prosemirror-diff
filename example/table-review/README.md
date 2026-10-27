@@ -63,6 +63,6 @@ alternative is broken. [Current Tiptap Compare](https://tiptap.dev/docs/compare/
 is already headless and supports client/server use; this example claims neither
 exclusive architecture nor competitive parity.
 
-Maintenance follow-up: the older blocks-demo/text-review-view entry has 18
-baseline TS2339 DOM element typing diagnostics. This new table entry is checked
-separately; its passing check must not conceal that existing debt.
+Browser entry checks must include their Worker modules explicitly: TypeScript
+does not follow a Worker `new URL(...)` as an imported source. The block and table
+entries use DOM element types matching their respective HTML controls.

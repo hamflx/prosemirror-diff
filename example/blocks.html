@@ -48,6 +48,23 @@
         Previous/Next visits parents before their children. Each detail layer reports its own precision.</p>
       <ol id="changes"></ol>
     </section>
+    <section aria-labelledby="metadata-title">
+      <h2 id="metadata-title">Selected block: metadata details</h2>
+      <p>For a single replacement with identical text and structure, compare marks and attributes at original positions.
+        These informational records are not additional edits or evidence of character identity. Parent events remain complete.
+        Unknown formatting stays uninterpreted even when its snapshot is shown.</p>
+      <p>Only the selected node is compared. Pagination limits displayed rows, not synchronous traversal or snapshot work.
+        Neither the alignment cell budget nor the text size limit controls metadata comparison.</p>
+      <p id="metadata-status" role="status" aria-live="polite"></p>
+      <div class="controls" aria-label="Metadata navigation">
+        <button id="metadata-previous" type="button" disabled>Previous metadata detail</button>
+        <button id="metadata-next" type="button" disabled>Next metadata detail</button>
+        <button id="metadata-page-previous" type="button" disabled>Previous metadata page</button>
+        <button id="metadata-page-next" type="button" disabled>Next metadata page</button>
+      </div>
+      <p id="metadata-page-status" aria-live="polite"></p>
+      <ol id="metadata-changes"></ol>
+    </section>
     <section aria-labelledby="text-title">
       <h2 id="text-title">Selected block: text details</h2>
       <p id="text-owner"></p>
@@ -56,7 +73,7 @@
         Strong, emphasis, code and non-navigating link formatting stay visible in each original.
         Unknown marks and non-text inline content are unsupported.</p>
       <p id="text-format-scope"><strong>Text correspondence only.</strong> Formatting is not independently compared here.
-        Unchanged text does not mean unchanged marks. For same-text formatting changes, use the metadata comparison example.
+        Unchanged text does not mean unchanged marks. Same-text, same-structure changes use the metadata panel above instead.
         Repeated text can have ambiguous correspondence; these ranges do not establish identity or actual edit history.</p>
       <p id="text-precision">The text algorithm may return a coarse replacement; its fallback status is not exposed.
         These are not guaranteed minimal edits. The alignment cell budget does not control text comparison.

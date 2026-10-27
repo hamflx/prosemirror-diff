@@ -12,6 +12,7 @@ export const boundaryKey = (scope, position) => `${scope}:${position}`
 // containing block (-1 for the document), so child and parent targets differ.
 export function renderDocument(doc, panel) {
   const targets = []
+  const inlineTargets = []
   const boundaries = new Map()
   panel.replaceChildren()
 
@@ -34,7 +35,7 @@ export function renderDocument(doc, panel) {
       const label = element('span', `${node.type.name} [${from}, ${to})`)
       label.className = 'block-label'
       block.append(label)
-      const target = {element: block, from, to, scope}
+      const target = {element: block, from, to, scope, node}
       targets.push(target)
       if (node.type.name === 'image') {
         const figure = element('figure')
@@ -58,6 +59,10 @@ export function renderDocument(doc, panel) {
         text.className = 'source-text'
         target.source = text
         renderTextSource(text, node)
+        node.forEach((child, offset, index) => {
+          if (child.type.name === 'inline_token') inlineTargets.push({element: text.childNodes[index], node: child,
+            from: from + 1 + offset, to: from + 1 + offset + child.nodeSize, scope: from, inline: true})
+        })
         if (!node.childCount) {
           text.classList.add('empty-block')
           block.append(element('span', 'Empty paragraph'))
@@ -73,7 +78,7 @@ export function renderDocument(doc, panel) {
   }
 
   renderChildren(doc, 0, -1, panel)
-  return {targets, boundaries}
+  return {targets, boundaries, inlineTargets}
 }
 
 // Preorder gives navigation an explicit parent-before-child order. The entries

@@ -26,6 +26,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "core-js": "^3.49.0",
     "jsdom": "^27.4.0",
+    "prosemirror-tables": "1.8.5",
     "rollup": "^4.62.3",
     "vite": "^7.3.6",
     "vitest": "^3.2.7"
@@ -39,7 +40,9 @@
     "demo:blocks": "vite --config example/vite.blocks.config.mjs --host 127.0.0.1",
     "build:blocks-demo": "vite build --config example/vite.blocks.config.mjs",
     "demo:legacy": "vite --config example/vite.legacy.config.mjs --host 127.0.0.1",
-    "build:legacy-demo": "vite build --config example/vite.legacy.config.mjs"
+    "build:legacy-demo": "vite build --config example/vite.legacy.config.mjs",
+    "demo:tables": "vite --config example/vite.tables.config.mjs --host 127.0.0.1",
+    "build:tables-demo": "vite build --config example/vite.tables.config.mjs"
   },
   "repository": {
     "type": "git",

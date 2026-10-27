@@ -1,0 +1,22 @@
+@import './metadata-demo.css';
+.controls {align-items:center}
+.documents > section {min-width:0}
+.document {max-height:32rem;overflow:auto}
+.table-scroll {overflow:auto;max-width:100%;margin:1rem 0;padding:4px}
+table {border-collapse:collapse;min-width:12rem;width:100%;table-layout:auto}
+caption {text-align:left;font-size:.85rem;margin-bottom:.6rem}
+td,th {border:1px solid #718279;padding:.7rem;min-width:3rem;vertical-align:top}
+td p,th p {margin:.3rem 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.range-selected {outline:3px solid #99600c;outline-offset:-3px;background:#fff0c5}
+.location {min-height:3rem;font-family:monospace;overflow-wrap:anywhere}
+.scope,#status {background:#e4eee7;padding:1rem;border-radius:6px}
+.literal-link {text-decoration:underline;color:#245e8a}
+button[aria-pressed="true"] {outline:3px solid #99600c;background:#fff0c5;color:#22322d}
+button:focus-visible,select:focus-visible,.table-scroll:focus-visible {outline:3px solid #185fa4;outline-offset:3px}
+#changes {padding-left:1.4rem}
+#changes li {margin:.6rem 0}
+#changes button {white-space:normal;overflow-wrap:anywhere;text-align:left;max-width:100%}
+#raw {white-space:pre-wrap;overflow-wrap:anywhere;max-height:30rem;overflow:auto}
+#error {color:#922b21;border:2px solid currentColor;padding:1rem}
+footer {margin-top:2rem;font-size:.85rem}
+@media(max-width:650px) {.documents {grid-template-columns:1fr}.controls {flex-direction:column;align-items:stretch}.controls select,.controls button {max-width:100%;width:100%;min-width:0}}

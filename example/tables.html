@@ -8,6 +8,13 @@
 <label for="budget">Alignment</label><select id="budget"><option value="100000">Default budget</option><option value="0">Zero cells: coarse fallback</option></select>
 <button id="previous" type="button" disabled>Previous event</button><button id="next" type="button" disabled>Next event</button>
 </section>
+<details id="local-inputs"><summary>Compare your local JSON snapshots</summary>
+<p id="input-help">Paste two fixed-schema ProseMirror document JSON values. Parsing and comparison run locally in this page's Worker; these inputs are not uploaded or persisted by this example. Each side is limited to 256 KiB UTF-8, with at most 2,000 combined document nodes. The existing schema and grid limits also apply. Editing either input cancels work and clears the old result. Drafts remain until you edit them or reload.</p>
+<div class="documents">
+<label for="before-json">Before JSON<textarea id="before-json" rows="8" maxlength="262144" spellcheck="false" aria-describedby="input-help"></textarea></label>
+<label for="after-json">After JSON<textarea id="after-json" rows="8" maxlength="262144" spellcheck="false" aria-describedby="input-help"></textarea></label>
+</div><button id="compare-json" type="button">Compare JSON</button>
+</details>
 <p id="status" role="status" aria-live="polite"></p><p id="error" role="alert" hidden></p>
 <p class="scope">Fixed official table schema only. Both models and table grids are checked before comparison. Paths belong to this report, not persistent node identities. Parent and nested events overlap intentionally: do not add or apply them as separate edits. Positions are original half-open ProseMirror offsets, not row/column indexes.</p>
 <p>Marks remain visible in each original. This view does not independently classify formatting, infer cell correspondence, detect moves, repair grids, or provide accept/reject edits. Empty boundaries are stated numerically; a highlighted containing table is context only. Column width metadata is retained in raw data, not used for pixel-exact layout.</p>

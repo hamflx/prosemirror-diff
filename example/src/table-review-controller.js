@@ -1,5 +1,6 @@
 import {eventDirectory} from '../headless/event-directory.mjs'
 import {renderTableSource,locateTableRange} from './table-source-view.js'
+import {tableInputLimits} from './table-json-input.js'
 
 export function createTableReview(root, {workerFactory = () => new Worker(new URL('./table-review-worker.js',import.meta.url),{type:'module'})} = {}) {
   const find = id => root.querySelector('#'+id)
@@ -32,13 +33,16 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
   }
   previous.onclick = () => activate(selected-1,true)
   next.onclick = () => activate(selected+1,true)
-  return {
-    load(sample, options = {maxDepth:4,maxCells:100000}) {
+    function load(sample, options = {maxDepth:4,maxCells:100000}, json = false) {
       if (disposed) return
       const id = ++generation
       worker?.terminate(); worker = undefined; clear()
       status.textContent = 'Comparing validated table snapshots…'
       const fail = message => {clear(); status.textContent='Comparison unavailable; no review result is claimed.';error.hidden=false;error.textContent=message}
+      if (json && (typeof sample.beforeText !== 'string' || typeof sample.afterText !== 'string' ||
+        sample.beforeText.length > tableInputLimits.bytesPerSide || sample.afterText.length > tableInputLimits.bytesPerSide)) {
+        fail('JSON exceeds the per-side input limit; reduce the input before comparing.');return
+      }
       try {
         const current = worker = workerFactory()
         current.onmessage = ({data}) => {
@@ -62,9 +66,13 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
           } catch {fail('The comparison result could not be rendered; stale content was cleared.')}
         }
         current.onerror = () => {if (!disposed && id === generation && current === worker) {current.terminate();worker=undefined;fail('Comparison worker failed; try another example.')}}
-        current.postMessage({before:sample.before,after:sample.after,options})
+        current.postMessage(json ? {json:{before:sample.beforeText,after:sample.afterText},options} : {before:sample.before,after:sample.after,options})
       } catch { worker?.terminate();worker=undefined;fail('Comparison worker is unavailable.') }
-    },
+    }
+  return {
+    load,
+    loadJSON(beforeText,afterText,options) {load({beforeText,afterText},options,true)},
+    cancel() {if(disposed)return;++generation;worker?.terminate();worker=undefined;clear();status.textContent='Inputs changed. Compare JSON to create a new result.'},
     dispose() {if(disposed)return;disposed=true;++generation;worker?.terminate();worker=undefined;clear();status.textContent='Review disposed.'}
   }
 }

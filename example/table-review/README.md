@@ -34,10 +34,28 @@ remain valid HTML: `table > tbody > tr > td/th`; no diff divs are inserted there
 An empty boundary is stated numerically outside the table, with a containing table
 highlighted only for context. No synthetic empty row/cell is created.
 
+## Compare your own JSON pair
+
+Open **Compare your local JSON snapshots**, paste the before/after document JSON,
+then press **Compare JSON**. The initial drafts contain the row-insertion example.
+The selected source changes to **Local JSON inputs**; changing the alignment
+budget recomputes the current pair. Choosing a bundled example preserves drafts.
+Editing either draft cancels pending work and clears all old output immediately.
+Results retain canonical original snapshots and original ranges, not JSON source
+whitespace/key ordering. Parse/schema/grid failures show no stale result.
+
+JSON parsing and comparison run in the local Worker. No input upload, storage,
+network request or navigation is added; link attributes stay literal data. Each
+side allows at most 256 KiB UTF-8 and the pair at most 2,000 document nodes, before
+existing schema/grid limits. Textarea length is an additional character cap; the
+Worker checks actual UTF-8 size. These bounds are not a time guarantee. Inputs
+stay in the current page until edited/reloaded; this is not a sandbox for hostile
+JavaScript objects, an HTML importer or a general-schema adapter.
+
 ## Scope and conservative behavior
 
-- Only the bundled schema and examples are accepted; this is not an upload/import
-  interface or a renderer for arbitrary similar-looking schemas.
+- Only the bundled schema is accepted, including locally pasted JSON pairs; this
+  is not a renderer for arbitrary similar-looking schemas.
 - Unknown nodes/marks/attrs, nested tables, invalid spans/grids and consumer limits
   reject the comparison. Failure clears old documents, events and raw output.
 - Text and marks remain in the original cells. The event list does not separately

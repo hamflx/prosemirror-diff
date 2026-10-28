@@ -13,10 +13,10 @@ Changes require independent review before merging.
 | Oct 22 | Completed: [public node-copy API](2026-10-22.md), [grapheme comparison](2026-10-22-grapheme.md), [structured metadata comparison](2026-10-22-metadata.md), [read-only metadata example](2026-10-22-metadata-demo.md) |
 | Oct 23 | Completed: [top-level block changes](2026-10-23-blocks.md), [consumer DOM and range regressions](2026-10-23-dom.md), [block review example](2026-10-23-block-demo.md), [nested block details](2026-10-23-nested-blocks.md), [caller-selected node metadata](2026-10-23-node-metadata.md), [nested review example](2026-10-23-nested-demo.md), [selected-node metadata example](2026-10-23-node-metadata-demo.md), [metadata boundary regressions](2026-10-23-metadata-boundaries.md), [selected-block text review](2026-10-23-text-review.md), [asynchronous text review](2026-10-23-text-responsiveness.md), [paginated text details](2026-10-23-text-pagination.md), [composition contract regressions](2026-10-23-composition-contracts.md), [marked text review](2026-10-23-marked-text-review.md) |
 | Oct 24 | Completed: [executable snapshot review report](2026-10-24-headless-review.md); investigated: [official table-model integration](2026-10-24-tables.md) |
-| Oct 25 | Pending: empty documents, leaf nodes and nested schema validity |
+| Oct 25 | Completed: [annotation review policy](2026-10-25-annotation-policy.md) |
 | Oct 26 | Pending: pathological edit distance and deadline coverage |
-| Oct 27 | Pending: allocation and scaling measurements on realistic documents |
-| Oct 28 | Pending: public API/bundle compatibility and downstream examples |
+| Oct 27 | Completed: [interactive table review and documented entry](../../example/table-review/README.md) |
+| Oct 28 | Candidate: [local table JSON inputs](2026-10-28-local-table-input.md), browser acceptance incomplete |
 | Oct 29 | Pending: independent review and high-value regression gaps |
 | Oct 30 | Pending: rerun reproducible validation and summarize actual outcomes |
 

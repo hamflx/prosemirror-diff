@@ -2,13 +2,52 @@ import {eventDirectory} from '../headless/event-directory.mjs'
 import {renderTableSource,locateTableRange} from './table-source-view.js'
 import {tableInputLimits} from './table-json-input.js'
 
-export function createTableReview(root, {workerFactory = () => new Worker(new URL('./table-review-worker.js',import.meta.url),{type:'module'})} = {}) {
+export function createTableReview(root, {workerFactory = () => new Worker(new URL('./table-review-worker.js',import.meta.url),{type:'module'}), metadataWorkerFactory = workerFactory} = {}) {
   const find = id => root.querySelector('#'+id)
   const previous = /** @type {HTMLButtonElement} */ (find('previous'))
   const next = /** @type {HTMLButtonElement} */ (find('next'))
   const list = find('changes'), status = find('status'), error = find('error')
   let worker, generation = 0, disposed = false, entries = [], selected = -1, views = {}, buttons = []
+  let metadataWorker, metadataGeneration = 0, retained
+  function clearMetadata() {
+    ++metadataGeneration; metadataWorker?.terminate(); metadataWorker = undefined
+    find('metadata-records').replaceChildren()
+    find('metadata-status').textContent = 'No event selected.'
+  }
+  function inspectMetadata(path) {
+    clearMetadata()
+    const id = metadataGeneration
+    find('metadata-status').textContent = `Inspecting metadata for event ${path}…`
+    const fail = () => {
+      find('metadata-records').replaceChildren()
+      find('metadata-status').textContent = 'Metadata unavailable; complete original event retained.'
+    }
+    try {
+      const current = metadataWorker = metadataWorkerFactory()
+      current.onmessage = ({data}) => {
+        if (disposed || id !== metadataGeneration || current !== metadataWorker) return
+        current.terminate(); metadataWorker = undefined
+        if (!data.ok || !data.selected) {fail();return}
+        const detail = data.selected
+        find('metadata-status').textContent = `Event ${path}: ${detail.coverage}. ${detail.reason}`
+        if (detail.coverage !== 'metadata') return
+        for (const record of detail.records) {
+          const item = document.createElement('li'), values = document.createElement('pre')
+          item.append(`${record.kind} · ${record.nodeType} · Before [${record.oldFrom}, ${record.oldTo}) → After [${record.newFrom}, ${record.newTo})`)
+          values.textContent = JSON.stringify({before:record.before,after:record.after},null,2)
+          item.append(values);find('metadata-records').append(item)
+        }
+        if (!detail.records.length) find('metadata-status').append(' No metadata records in this selected event.')
+      }
+      current.onerror = () => {
+        if (disposed || id !== metadataGeneration || current !== metadataWorker) return
+        current.terminate();metadataWorker = undefined;fail()
+      }
+      current.postMessage({kind:'metadata',before:retained.snapshots.before,after:retained.snapshots.after,options:retained.options,eventPath:path})
+    } catch {metadataWorker?.terminate();metadataWorker=undefined;fail()}
+  }
   function clear() {
+    clearMetadata();retained = undefined
     entries = []; selected = -1; views = {}; buttons = []
     list.replaceChildren(); previous.disabled = next.disabled = true
     for (const id of ['before','after','before-location','after-location','raw']) find(id).replaceChildren()
@@ -18,6 +57,7 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
     if (disposed || index < 0 || index >= entries.length) return
     selected = index
     const entry = entries[index]
+    inspectMetadata(entry.path)
     buttons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)))
     const focused = document.activeElement
     previous.disabled = index === 0; next.disabled = index === entries.length-1
@@ -51,6 +91,7 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
           if (!data.ok) {fail(data.error || 'Snapshot comparison failed');return}
           try {
             const report = data.report, directory = eventDirectory(report)
+            retained = report
             views.before = renderTableSource(find('before'),report.snapshots.before,'Before')
             views.after = renderTableSource(find('after'),report.snapshots.after,'After')
             find('raw').textContent = JSON.stringify(report,null,2)

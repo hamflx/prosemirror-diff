@@ -12,7 +12,7 @@ beforeEach(()=>{document.body.innerHTML=html;Element.prototype.scrollIntoView=vi
 const root=()=>document.getElementById('table-review')
 function harness() {
   const workers=[]
-  const controller=createTableReview(root(),{workerFactory:()=>{
+  const controller=createTableReview(root(),{metadataWorkerFactory:()=>({postMessage:vi.fn(),terminate:vi.fn()}),workerFactory:()=>{
     const worker={postMessage:vi.fn(),terminate:vi.fn(),onmessage:null,onerror:null};workers.push(worker);return worker
   }})
   return {controller,workers,reply:(index,report)=>workers[index].onmessage({data:{ok:true,report}})}

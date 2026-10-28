@@ -59,7 +59,7 @@ JavaScript objects, an HTML importer or a general-schema adapter.
 - Unknown nodes/marks/attrs, nested tables, invalid spans/grids and consumer limits
   reject the comparison. Failure clears old documents, events and raw output.
 - Text and marks remain in the original cells. The event list does not separately
-  classify formatting. Parent/child events are not additive patches or proof of
+  classify mixed text/format edits. Parent/child events are not additive patches or proof of
   identity, and column/row changes are not semantic move detection.
 - Marks on non-text nodes cannot be represented by this renderer and reject the
   view, rather than being silently dropped or wrapped around table structure.
@@ -75,6 +75,29 @@ JavaScript objects, an HTML importer or a general-schema adapter.
   virtualization for large event lists or a complete accessibility certification.
 
 ## Reproducible samples and acceptance
+
+### Selected event metadata
+
+Selecting an existing event also requests its metadata details in a separate
+cancellable Worker, using the existing consumer's event path and original offsets.
+Only a one-to-one replacement with identical text and structure yields metadata
+records. The panel shows before/after marks or attrs and both half-open ranges.
+Text/structure changes and validation failures retain their conservative reason;
+no empty list is presented as proof that formatting is unchanged.
+
+The original tables, block report, raw snapshots and event ranges are untouched.
+The panel does not add wrappers inside tables, infer cell identity or apply edits.
+Values are literal text, including link targets. Selection recomputes the bounded
+comparison in a Worker; it is not a cache or performance improvement. Selecting
+another event, editing input or switching comparisons cancels previous metadata
+work and discards obsolete callbacks. This is an example integration, not a new
+library API or schema extension. Keyboard event navigation uses the same controls.
+
+Regression cases include strong addition/removal, link attributes, valid colwidth,
+mixed text/marks and row insertion/deletion, raw/range retention and stale Workers.
+Browser acceptance must additionally check production Workers, keyboard navigation
+and 390/650px layouts. The motivating snapshot marks/attrs workflow is documented
+in [the ProseMirror community discussion](https://discuss.prosemirror.net/t/prosemirror-changeset-how-to-also-see-the-changes-in-marks-and-attrs/7677).
 
 `samples.json` contains ten pairs: row/column insertion and deletion, horizontal
 and vertical merges, restoration of each original layout, marks-only and mixed

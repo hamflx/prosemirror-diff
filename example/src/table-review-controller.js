@@ -12,12 +12,14 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
   function clearMetadata() {
     ++metadataGeneration; metadataWorker?.terminate(); metadataWorker = undefined
     find('metadata-records').replaceChildren()
+    find('text-records').textContent = ''
+    find('text-records').hidden = true
     find('metadata-status').textContent = 'No event selected.'
   }
   function inspectMetadata(path) {
     clearMetadata()
     const id = metadataGeneration
-    find('metadata-status').textContent = `Inspecting metadata for event ${path}…`
+    find('metadata-status').textContent = `Inspecting details for event ${path}…`
     const fail = () => {
       find('metadata-records').replaceChildren()
       find('metadata-status').textContent = 'Metadata unavailable; complete original event retained.'
@@ -30,6 +32,17 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
         if (!data.ok || !data.selected) {fail();return}
         const detail = data.selected
         find('metadata-status').textContent = `Event ${path}: ${detail.coverage}. ${detail.reason}`
+        if (detail.coverage === 'text-only-partial') {
+          find('metadata-status').append(` ${detail.precision}`)
+          const records = detail.hunks.map(hunk => ({
+            kind:hunk.kind,
+            before:{from:hunk.oldFrom,to:hunk.oldTo,text:detail.oldText.slice(hunk.oldFrom-detail.oldStart,hunk.oldTo-detail.oldStart)},
+            after:{from:hunk.newFrom,to:hunk.newTo,text:detail.newText.slice(hunk.newFrom-detail.newStart,hunk.newTo-detail.newStart)}
+          }))
+          find('text-records').textContent = JSON.stringify(records,null,2)
+          find('text-records').hidden = false
+          return
+        }
         if (detail.coverage !== 'metadata') return
         for (const record of detail.records) {
           const item = document.createElement('li'), values = document.createElement('pre')

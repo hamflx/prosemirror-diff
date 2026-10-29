@@ -76,13 +76,13 @@ JavaScript objects, an HTML importer or a general-schema adapter.
 
 ## Reproducible samples and acceptance
 
-### Selected event metadata
+### Selected event details
 
 Selecting an existing event also requests its metadata details in a separate
 cancellable Worker, using the existing consumer's event path and original offsets.
 Only a one-to-one replacement with identical text and structure yields metadata
 records. The panel shows before/after marks or attrs and both half-open ranges.
-Text/structure changes and validation failures retain their conservative reason;
+Unsupported text/structure changes and validation failures retain their conservative reason;
 no empty list is presented as proof that formatting is unchanged.
 
 The original tables, block report, raw snapshots and event ranges are untouched.
@@ -128,3 +128,28 @@ exclusive architecture nor competitive parity.
 Browser entry checks must include their Worker modules explicitly: TypeScript
 does not follow a Worker `new URL(...)` as an imported source. The block and table
 entries use DOM element types matching their respective HTML controls.
+
+### Partial text snippets in a selected paragraph
+
+For **text-and-marks**, select nested event **0.0.0.0**. The existing consumer
+returns text-only partial details: an insertion of "Updated " at Before [12,12)
+and After [12,20). Reversing the local pair gives the deletion. The panel displays
+literal before/after snippets and original half-open UTF-16 positions. It does
+not rewrite either table or alter the raw block report. Empty text denotes the
+insertion/deletion boundary, not missing data. Escaped JSON preserves whitespace.
+
+Only an eligible one-to-one textblock replacement yields these details. Parent
+table events, inline atoms, incompatible paragraph markup, coarse events without an eligible paragraph pair, and
+size-limit failures retain their conservative reason. Formatting in mixed edits
+is **not independently compared**. Text matching may be coarse or nonminimal;
+no fallback cause, character identity or edit history is inferred. The existing
+20,000 combined UTF-16 text limit applies; it is not a whole-call time guarantee.
+Metadata-only selections still use metadata records. Switching selection/input
+clears both kinds of details and rejects obsolete Worker responses.
+
+[Complex snapshot comparison discussion](https://discuss.prosemirror.net/t/visualize-changes-between-2-tiptap-jsons/8328)
+includes a March 2026 report that whole-block coloring is too coarse, alongside
+reports of custom recursive solutions. This example exposes already available
+paragraph results; it does not claim a new comparison algorithm or arbitrary
+custom-node support. [Tiptap Compare](https://tiptap.dev/docs/compare/guides/compare-documents)
+already offers nested comparison rendering as an alternative.

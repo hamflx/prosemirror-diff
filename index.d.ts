@@ -56,16 +56,18 @@ export type MetadataChange = MetadataRange & (
   {kind: 'marks'; before: MetadataMark[]; after: MetadataMark[]}
 )
 /** Requires matching schema, structure and text at runtime. */
-export declare function compareDocumentMetadata(oldDoc: Node, newDoc: Node): MetadataChange[]
-export interface NodeMetadataOptions {oldFrom?: number; newFrom?: number}
+export interface AttributeFilterOptions {ignoreAttributes?: readonly string[]}
+export declare function compareDocumentMetadata(oldDoc: Node, newDoc: Node, options?: AttributeFilterOptions): MetadataChange[]
+export interface NodeMetadataOptions extends AttributeFilterOptions {oldFrom?: number; newFrom?: number}
 /** Caller selects corresponding non-text, non-document nodes; offsets are outer starts. */
 export declare function compareNodeMetadata(oldNode: Node, newNode: Node, options?: NodeMetadataOptions): MetadataChange[]
-export interface BlockOptions {maxCells?: number; maxDepth?: number}
-export interface BlockDetails {changes: BlockChange[]; fallback: boolean; truncated: boolean}
+export interface BlockOptions extends AttributeFilterOptions {maxCells?: number; maxDepth?: number}
+export interface ComparisonPolicy {ignoredAttributes: string[]}
+export interface BlockDetails {changes: BlockChange[]; fallback: boolean; truncated: boolean; comparison?: ComparisonPolicy}
 export interface BlockChange {
   kind: 'insert' | 'delete' | 'replace'
   oldFrom: number; oldTo: number; newFrom: number; newTo: number
   before: Node[]; after: Node[]; details?: BlockDetails
 }
-export interface BlockComparison {changes: BlockChange[]; fallback: boolean}
+export interface BlockComparison {changes: BlockChange[]; fallback: boolean; comparison?: ComparisonPolicy}
 export declare function compareDocumentBlocks(oldDoc: Node, newDoc: Node, options?: BlockOptions): BlockComparison

@@ -59,6 +59,10 @@ export function refineSelected(change) {
 // Example helper, not a new library API. Options are useful for reproducible tests;
 // the CLI intentionally fixes depth and cell budget rather than exposing a framework.
 export function reviewDocuments(oldDoc, newDoc, eventPath, options = {maxDepth: 2, maxCells: 100000}, consumerOptions = {formatting: false}) {
+  // The v1 saved-report options and refinement path do not retain this policy.
+  if (Array.isArray(options.ignoreAttributes) && options.ignoreAttributes.length > 0) {
+    throw new RangeError('Saved headless reports do not support ignoreAttributes; use the structured comparison APIs directly')
+  }
   const result = compareDocumentBlocks(oldDoc, newDoc, options)
   const path = eventPath === undefined ? undefined : parseEventPath(eventPath)
   const selected = path ? {path, ...refineSelected(selectEvent(result, path))}

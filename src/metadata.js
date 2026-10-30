@@ -1,4 +1,5 @@
 import {Node} from 'prosemirror-model'
+import {ignoredAttributes, filterAttrs} from './attribute-filter.js'
 
 /** @typedef {import('../index.js').MetadataValue} MetadataValue */
 /** @typedef {{[key: string]: MetadataValue}} MetadataAttrs */
@@ -44,9 +45,11 @@ const incompatible = () => { throw new RangeError('Metadata comparison requires 
  * Structural/text edits are rejected, not heuristically paired.
  * @param {Node} oldDoc
  * @param {Node} newDoc
+ * @param {{ignoreAttributes?: readonly string[]}} [options]
  * @returns {MetadataChange[]}
  */
-export const compareDocumentMetadata = (oldDoc, newDoc) => {
+export const compareDocumentMetadata = (oldDoc, newDoc, options = {}) => {
+  const ignored = ignoredAttributes(options)
   if (!oldDoc || !newDoc || oldDoc.type?.schema?.topNodeType !== oldDoc.type ||
       newDoc.type?.schema?.topNodeType !== newDoc.type ||
       typeof oldDoc.check !== 'function' || typeof newDoc.check !== 'function') {
@@ -57,7 +60,7 @@ export const compareDocumentMetadata = (oldDoc, newDoc) => {
   }
   oldDoc.check()
   newDoc.check()
-  return compareMetadata(oldDoc, newDoc, 0, 0, true)
+  return compareMetadata(oldDoc, newDoc, 0, 0, true, ignored)
 }
 
 /**
@@ -65,10 +68,12 @@ export const compareDocumentMetadata = (oldDoc, newDoc) => {
  * Offsets identify each node's outer start, not its content start.
  * @param {Node} oldNode
  * @param {Node} newNode
- * @param {{oldFrom?: number, newFrom?: number}} [options]
+ * @param {{oldFrom?: number, newFrom?: number, ignoreAttributes?: readonly string[]}} [options]
  * @returns {MetadataChange[]}
  */
-export const compareNodeMetadata = (oldNode, newNode, {oldFrom = 0, newFrom = 0} = {}) => {
+export const compareNodeMetadata = (oldNode, newNode, options = {}) => {
+  const {oldFrom = 0, newFrom = 0} = options
+  const ignored = ignoredAttributes(options)
   for (const node of [oldNode, newNode]) {
     if (!node || !node.type?.schema || typeof node.check !== 'function') {
       throw new TypeError('Expected ProseMirror nodes')
@@ -88,10 +93,12 @@ export const compareNodeMetadata = (oldNode, newNode, {oldFrom = 0, newFrom = 0}
   }
   oldNode.check()
   newNode.check()
-  return compareMetadata(oldNode, newNode, oldFrom, newFrom, false)
+  return compareMetadata(oldNode, newNode, oldFrom, newFrom, false, ignored)
 }
 
-const compareMetadata = (oldRoot, newRoot, oldFrom, newFrom, documentRoot) => {
+const compareMetadata = (oldRoot, newRoot, oldFrom, newFrom, documentRoot, ignored) => {
+  const project = (kind, value) => kind === 'attrs' ? filterAttrs(value, ignored)
+    : value.map(mark => ({...mark, ...(mark.attrs ? {attrs: filterAttrs(mark.attrs, ignored)} : {})}))
   /** @type {MetadataChange[]} */
   const changes = []
   /**
@@ -108,7 +115,7 @@ const compareMetadata = (oldRoot, newRoot, oldFrom, newFrom, documentRoot) => {
     // Snapshot before comparison also rejects cycles and unsupported values.
     before = snapshot(before)
     after = snapshot(after)
-    if (!equalValue(before, after)) {
+    if (!equalValue(ignored.size ? project(kind, before) : before, ignored.size ? project(kind, after) : after)) {
       changes.push(/** @type {MetadataChange} */ ({kind, nodeType, oldFrom, oldTo, newFrom, newTo, before, after}))
     }
   }

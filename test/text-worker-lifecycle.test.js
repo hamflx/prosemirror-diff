@@ -151,7 +151,7 @@ it('preserves consecutive whitespace and newlines through highlighting and resto
 it('disposes the previous actual-page controller on scenario reload while keeping block navigation usable', async () => {
   vi.resetModules()
   vi.stubGlobal('Worker', DeferredWorker)
-  await import('../example/src/blocks-demo.js')
+  await import('../example/src/blocks-demo-entry.js')
   const choose = value => { byId('scenario').value = value; byId('scenario').dispatchEvent(new Event('change')) }
   choose('text-unicode')
   const old = workers[0]

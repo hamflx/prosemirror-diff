@@ -9,7 +9,7 @@
 <button id="previous" type="button" disabled>Previous event</button><button id="next" type="button" disabled>Next event</button>
 </section>
 <details id="local-inputs"><summary>Compare your local JSON snapshots</summary>
-<p id="input-help">Paste two fixed-schema ProseMirror document JSON values. Parsing and comparison run locally in this page's Worker; these inputs are not uploaded or persisted by this example. Each side is limited to 256 KiB UTF-8, with at most 2,000 combined document nodes. The existing schema and grid limits also apply. Editing either input cancels work and clears the old result. Drafts remain until you edit them or reload.</p>
+<p id="input-help">Paste two fixed-schema ProseMirror document JSON values. Parsing and comparison run locally in this page's Worker; these inputs are not uploaded or persisted by this example. Each side is limited to 256 KiB UTF-8, with at most 2,000 combined document nodes. The existing schema and grid limits also apply. Editing either input cancels work and clears the old result. Drafts are cleared when you switch to another example page or reload; copy any inputs you want to keep before leaving.</p>
 <div class="documents">
 <label for="before-json">Before JSON<textarea id="before-json" rows="8" maxlength="262144" spellcheck="false" aria-describedby="input-help"></textarea></label>
 <label for="after-json">After JSON<textarea id="after-json" rows="8" maxlength="262144" spellcheck="false" aria-describedby="input-help"></textarea></label>
@@ -26,4 +26,4 @@
 <section aria-labelledby="metadata-title"><h2 id="metadata-title">Selected event details</h2><p>Select a nested paragraph event for available text snippets. Ranges are original UTF-16 ProseMirror positions. Text details do not classify formatting or establish character identity.</p><p id="metadata-status" role="status" aria-live="polite">No event selected.</p><ol id="metadata-records"></ol><pre id="text-records" aria-label="Partial text changes with original ranges" hidden></pre></section>
 <details><summary>Retained raw report and original snapshots</summary><pre id="raw"></pre></details>
 <footer>Comparison runs in a cancellable Worker. Switching examples discards the previous result. The alignment budget is not a whole-call time or memory guarantee. This small example is not a general document importer.</footer>
-</main><script type="module" src="./src/tables-demo.js"></script></body></html>
+</main><script type="module" src="./src/tables-demo-entry.js"></script></body></html>

@@ -1,3 +1,4 @@
+import {mountPairedLayout} from './paired-layout.js'
 import {eventDirectory} from '../headless/event-directory.mjs'
 import {renderTableSource,locateTableRange} from './table-source-view.js'
 import {tableInputLimits} from './table-json-input.js'
@@ -8,6 +9,7 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
   const next = /** @type {HTMLButtonElement} */ (find('next'))
   const list = find('changes'), status = find('status'), error = find('error')
   let worker, generation = 0, disposed = false, entries = [], selected = -1, views = {}, buttons = []
+  let pairedLayout
   let metadataWorker, metadataGeneration = 0, retained
   function clearMetadata() {
     ++metadataGeneration; metadataWorker?.terminate(); metadataWorker = undefined
@@ -60,6 +62,7 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
     } catch {metadataWorker?.terminate();metadataWorker=undefined;fail()}
   }
   function clear() {
+    pairedLayout?.dispose();pairedLayout=undefined
     clearMetadata();retained = undefined
     entries = []; selected = -1; views = {}; buttons = []
     list.replaceChildren(); previous.disabled = next.disabled = true
@@ -107,6 +110,7 @@ export function createTableReview(root, {workerFactory = () => new Worker(new UR
             retained = report
             views.before = renderTableSource(find('before'),report.snapshots.before,'Before')
             views.after = renderTableSource(find('after'),report.snapshots.after,'After')
+            pairedLayout=mountPairedLayout([find('before'),find('after')],(data.anchors||[]).map(([a,b])=>[views.before.find(t=>t.from===a)?.element,views.after.find(t=>t.from===b)?.element]))
             find('raw').textContent = JSON.stringify(report,null,2)
             entries = directory.entries
             for (const entry of entries) {

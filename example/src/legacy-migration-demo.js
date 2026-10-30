@@ -4,7 +4,9 @@ import {compareLegacyOrExplain} from './legacy-migration.js'
 import {schema, scenarios} from './legacy-migration-scenarios.js'
 import './metadata-demo.css'
 
-const byId = id => document.getElementById(id)
+export function mountLegacyDemo(root) {
+
+const byId = id => root.querySelector("#" + id)
 const select = byId('scenario'), serializer = DOMSerializer.fromSchema(schema)
 const render = (node, target) => target.replaceChildren(serializer.serializeFragment(node.content, {document}))
 
@@ -35,3 +37,6 @@ for (const scenario of scenarios) {
 }
 select.addEventListener('change', load)
 load()
+
+return {dispose(){root.replaceChildren()}}
+}

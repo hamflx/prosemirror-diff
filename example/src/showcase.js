@@ -1,3 +1,4 @@
+import {mountShowcaseDemo} from './showcase-demos.js'
 import './showcase.css'
 import {Schema} from 'prosemirror-model'
 import {schema as tableSchema} from '../table-snapshots/schema.mjs'
@@ -36,5 +37,29 @@ function integration(){heading('同一比较模型，离线消费','下面直接
  host.append(element('h3','在本地使用相同消费者'));const command=element('pre','node example/headless/cli.mjs example/headless/formatting-old.json example/headless/formatting-new.json 1 --formatting');command.className='result';host.append(command)
  const links=[['包与类型入口','README.md'],['离线 JSON 与事件路径','example/headless/README.md'],['批注显示分类：保留 raw 记录','example/headless/ANNOTATIONS.md'],['表格模型与网格校验','example/table-snapshots/README.md'],['能力与验证映射','docs/capability-matrix.md']];const list=element('ul');for(const [label,path] of links){const item=element('li'),link=element('a',label);link.href='https://github.com/hamflx/prosemirror-diff/blob/master/'+path;item.append(link);list.append(item)}host.append(list)
 }
-const tabs={双侧对齐:aligned,属性排除:attributes,...Object.fromEntries(Object.entries(pages).map(([key,[url,title,description]])=>[key,()=>{heading(title,description);const link=element('a','在完整页面打开 ↗');link.href=url;host.append(link);const frame=element('iframe');frame.title=title;frame.src=url;host.append(frame)}])),离线与接入:integration}
-for(const [name,render] of Object.entries(tabs)){const button=element('button',name);button.type='button';button.setAttribute('aria-pressed','false');button.addEventListener('click',()=>{dispose();dispose=()=>{};host.replaceChildren();for(const other of nav.children)other.setAttribute('aria-pressed',String(other===button));render()});nav.append(button)}nav.querySelector('button').click()
+const tabs={aligned,attributes,...Object.fromEntries(Object.entries(pages).map(([key,[url,title,description]])=>[url.replace('.html',''),()=>{heading(title,description);dispose=mountShowcaseDemo(host,url)}])),integration}
+const labels=['双侧对齐','属性排除','文字与嵌套','格式与属性','表格与JSON','旧API迁移','离线与接入']
+const keys=Object.keys(tabs)
+const screen=/** @type {HTMLElement} */ (document.querySelector('#screen'))
+const top=document.querySelector('#site-navigation')
+function route(){
+ dispose();dispose=()=>{};host.replaceChildren();nav.replaceChildren()
+ const parts=location.hash.slice(1).split('/');const section=['home','docs','examples'].includes(parts[0])?parts[0]:'home'
+ for(const link of top.querySelectorAll('a'))link.setAttribute('aria-current',link.hash.split('/')[0]==='#'+section?'page':'false')
+ document.getElementById('home').hidden=section!=='home'
+ document.getElementById('docs').hidden=section!=='docs'
+ screen.hidden=section!=='examples'
+ if(section!=='examples')return
+ const key=keys.includes(parts[1])?parts[1]:keys[0]
+ keys.forEach((id,index)=>{const link=element('a',labels[index]);link.href='#examples/'+id;link.setAttribute('aria-current',id===key?'page':'false');nav.append(link)})
+ tabs[key]()
+}
+const skip=document.querySelector('.skip')
+const skipContent=event=>{event.preventDefault();const target=document.getElementById('main');target.focus();target.scrollIntoView({block:'start'})}
+skip.addEventListener('click',skipContent)
+window.addEventListener('hashchange',route)
+const resume=event=>{if(event.persisted)route()}
+window.addEventListener('pageshow',resume)
+const leave=event=>{dispose();if(!event.persisted){window.removeEventListener('hashchange',route);window.removeEventListener('pageshow',resume);window.removeEventListener('pagehide',leave);skip.removeEventListener('click',skipContent)}}
+window.addEventListener('pagehide',leave)
+route()

@@ -135,7 +135,7 @@ it('clears prior metadata on validation failure, missing selection and unsupport
 })
 it('integrates the actual page, disposes on reload and keeps parent navigation', async () => {
   vi.resetModules()
-  await import('../example/src/blocks-demo.js')
+  await import('../example/src/blocks-demo-entry.js')
   const choose = value => { el('scenario').value = value; el('scenario').dispatchEvent(new Event('change')) }
   choose('text-unicode'); const old = workers[0]
   choose('text-marks')

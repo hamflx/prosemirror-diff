@@ -25,7 +25,7 @@ beforeEach(async () => {
   originalScroll = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView')
   Object.defineProperty(Element.prototype, 'scrollIntoView', {configurable: true, value: vi.fn()})
   document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML
-  await import('../example/src/blocks-demo.js')
+  await import('../example/src/blocks-demo-entry.js')
 })
 afterEach(() => {
   diffSpy.mockRestore()

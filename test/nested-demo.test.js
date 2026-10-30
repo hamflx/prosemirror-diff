@@ -18,7 +18,7 @@ beforeEach(async () => {
   originalScroll = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView')
   Object.defineProperty(Element.prototype, 'scrollIntoView', {configurable: true, value: vi.fn()})
   document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML
-  await import('../example/src/blocks-demo.js')
+  await import('../example/src/blocks-demo-entry.js')
 })
 afterEach(() => {
   if (originalScroll) Object.defineProperty(Element.prototype, 'scrollIntoView', originalScroll)
@@ -83,7 +83,7 @@ it('preserves nested sibling DOM order and repeated-block end boundaries', () =>
   choose('depth', '1')
   for (const side of ['before', 'after']) {
     const content = byId(side).querySelector('.child-content')
-    expect([...content.children].map(n => n.classList.contains('block') ? `block:${n.dataset.from}` : `marker:${n.dataset.position}`))
+    expect([...content.children].filter(n=>!n.classList.contains('alignment-spacer')).map(n => n.classList.contains('block') ? `block:${n.dataset.from}` : `marker:${n.dataset.position}`))
       .toEqual(['marker:1', 'block:1', 'marker:4', 'block:4', 'marker:7', 'block:7', 'marker:10'])
   }
   byId('next').click()

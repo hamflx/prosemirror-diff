@@ -62,7 +62,7 @@ it('uses the real example entry with independent blocks/sides and fresh pages on
   vi.resetModules()
   document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML
   vi.stubGlobal('Worker', undefined)
-  await import('../example/src/blocks-demo.js')
+  await import('../example/src/blocks-demo-entry.js')
   const choose = value => { const select = document.getElementById('scenario'); select.value = value; select.dispatchEvent(new Event('change')) }
   choose('marked-many-links')
   const groups = [...document.querySelectorAll('.mark-description-pages')]

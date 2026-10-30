@@ -1,11 +1,16 @@
+import {equalBlockAnchors,mountPairedLayout} from './paired-layout.js'
 import {scenarios, compareScenario, textSegments, rangeMatches} from './metadata-scenarios.js'
 import './metadata-demo.css'
 
-const byId = id => document.getElementById(id)
+export function mountMetadataDemo(root) {
+
+const byId = id => root.querySelector("#" + id)
 const select = byId('scenario')
 const previous = byId('previous')
 const next = byId('next')
 const list = byId('changes')
+let pairedLayout
+const blockTargets={old:[],new:[]}
 let changes = []
 let selected = -1
 const targets = {old: [], new: []}
@@ -20,6 +25,7 @@ const element = (tag, text) => {
 function render(doc, side, container) {
   container.replaceChildren()
   targets[side] = []
+  blockTargets[side]=[]
   doc.forEach((block, offset) => {
     if (block.type.name === 'image') {
       const figure = element('figure')
@@ -28,6 +34,7 @@ function render(doc, side, container) {
       img.alt = block.attrs.alt
       figure.append(img, element('figcaption', block.attrs.alt))
       container.append(figure)
+      blockTargets[side].push({from:offset,element:figure})
       targets[side].push({element: figure, from: offset, to: offset + block.nodeSize})
       return
     }
@@ -52,6 +59,7 @@ function render(doc, side, container) {
       }
     })
     container.append(paragraph)
+    blockTargets[side].push({from:offset,element:paragraph})
   })
 }
 
@@ -73,6 +81,7 @@ function activate(index, scroll = false) {
 }
 
 function load() {
+  pairedLayout?.dispose()
   const scenario = scenarios.find(item => item.id === select.value)
   changes = []
   buttons.length = 0
@@ -97,6 +106,8 @@ function load() {
   }
   render(scenario.oldDoc, 'old', byId('before'))
   render(scenario.newDoc, 'new', byId('after'))
+  const anchors=!scenario.scope&&error.hidden ? blockTargets.old.map((t,i)=>[t.element,blockTargets.new[i]?.element]) : equalBlockAnchors(scenario.oldDoc,scenario.newDoc).map(([a,b])=>[blockTargets.old.find(t=>t.from===a)?.element,blockTargets.new.find(t=>t.from===b)?.element])
+  pairedLayout=mountPairedLayout([byId('before'),byId('after')],anchors)
   changes.forEach((change, index) => {
     const item = element('li')
     const button = element('button', `${index + 1}. ${change.nodeType} ${change.kind === 'marks' ? 'formatting / link' : 'attributes'}`)
@@ -127,3 +138,6 @@ select.addEventListener('change', load)
 previous.addEventListener('click', () => activate(selected - 1, true))
 next.addEventListener('click', () => activate(selected + 1, true))
 load()
+
+return {dispose(){pairedLayout?.dispose();root.replaceChildren()}}
+}

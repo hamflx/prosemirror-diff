@@ -27,6 +27,7 @@ it('adds exactly the missing vertical space, recomputes without cumulative drift
    return {top,height:25}
  })
  const view=mountPairedLayout(panes,[nodes])
+ expect(panes.map(p=>p.style.scrollbarGutter)).toEqual(['stable','stable'])
  expect(panes[0].querySelector('.alignment-spacer').style.height).toBe('35.25px')
  view.measure();expect(panes[0].querySelector('.alignment-spacer').style.height).toBe('35.25px')
  expect(nodes[0].getBoundingClientRect().top).toBe(nodes[1].getBoundingClientRect().top)

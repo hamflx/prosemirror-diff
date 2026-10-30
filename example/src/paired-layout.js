@@ -25,8 +25,8 @@ export function equalBlockAnchors(before,after) {
 export function mountPairedLayout(panes,pairs){
   let disposed=false,measuring=false
   const tabIndexes=panes.map(p=>p.getAttribute('tabindex'))
-  const spacers=[],rowStyles=new Map(),oldStyles=panes.map(p=>({height:p.style.height,overflow:p.style.overflow,position:p.style.position}))
-  for(const pane of panes){pane.style.height='34rem';pane.style.overflow='auto';pane.style.position='relative';pane.tabIndex=0}
+  const spacers=[],rowStyles=new Map(),oldStyles=panes.map(p=>({height:p.style.height,overflow:p.style.overflow,position:p.style.position,scrollbarGutter:p.style.scrollbarGutter}))
+  for(const pane of panes){pane.style.height='34rem';pane.style.overflow='auto';pane.style.position='relative';pane.style.scrollbarGutter='stable';pane.tabIndex=0}
   const anchors=pairs.filter(pair=>pair.every(Boolean)&&!pair.some(n=>['TD','TH'].includes(n.tagName)))
   const spacerFor=node=>{
     let spacer=document.createElement('div'),sizing=spacer

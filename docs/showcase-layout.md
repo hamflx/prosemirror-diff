@@ -33,7 +33,7 @@ attributes remain intact. The fixed-schema renderer is not an arbitrary-schema
 layout engine. Different content and coarse/unpaired regions are not claimed to
 have exact correspondence.
 
-Both panes scroll together. Layout is recomputed for width/content changes and
+Both panes reserve scrollbar space so adding alignment space does not change text wrapping. Both panes scroll together. Layout is recomputed for width/content changes and
 asynchronous review updates. Controllers disconnect observers, release detached
 nodes and remove scroll handlers when replaced. Comparison columns stay beside
 each other at narrow breakpoints; input and detail controls may wrap independently.

@@ -224,6 +224,9 @@ export const diffWordsWithDetail = (oldText, newText) => {
 }
 
 const getDiffLevel = options => {
+  if (options?.ignoreAttributes !== undefined) {
+    throw new RangeError('ignoreAttributes is supported only by structured comparison APIs')
+  }
   const level = options?.level ?? 'char'
   if (level !== 'char' && level !== 'word' && level !== 'grapheme') {
     throw new RangeError("options.level must be 'char', 'word', or 'grapheme'")

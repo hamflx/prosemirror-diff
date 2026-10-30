@@ -549,3 +549,8 @@ For explicit annotation mark display policies, see the [headless annotation revi
 ## Table review example
 
 See [the read-only table review](example/table-review/README.md) for original grids, retained event navigation, raw reports and explicit fixed-schema limits. Run `npm ci`, then `npm run demo:tables` from the repository root and open **`/tables.html` on Vite's printed local address**. The root `/` is the separate older Vue example. The linked guide includes production preview steps.
+# Interactive capability laboratory
+
+Run `npm run demo:showcase` and open `/lab.html`, or build the complete static site with `npm run build:showcase`. The production entry is `example/dist/showcase/index.html`. The laboratory combines aligned original documents, synchronized scrolling, Unicode in-block text review, configurable attribute comparison, nested structure, metadata, tables/local JSON, legacy recovery and executable offline reports. See the [capability matrix](docs/capability-matrix.md) for API/helper boundaries and limitations.
+
+Structured comparisons accept `ignoreAttributes: ['id']` for direct node and mark attribute keys. Originals and coordinates are retained; filtered events are not a complete raw reconstruction script. See the [attribute policy contract](docs/attr-filter.md). The [aligned renderer](docs/aligned-review.md) is an example consumer, not a package API or an arbitrary-schema renderer.

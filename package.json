@@ -32,6 +32,8 @@
     "vitest": "^3.2.7"
   },
   "scripts": {
+    "demo:showcase": "vite --config example/vite.showcase.config.mjs --host 127.0.0.1",
+    "build:showcase": "vite build --config example/vite.showcase.config.mjs",
     "build": "rollup -c rollup.config.mjs",
     "test": "vitest run",
     "test:watch": "vitest",

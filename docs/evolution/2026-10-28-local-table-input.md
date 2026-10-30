@@ -27,3 +27,14 @@ through the production Worker and that editing cleared both tables and raw data.
 Error recovery, repeated source/budget switching and 390/650px input layouts
 remain unverified. Keep this candidate unmerged until those interactions pass;
 DOM tests do not replace real-browser acceptance. No speedup is claimed.
+
+## Subsequent acceptance and delivery
+
+The incomplete-browser paragraph above records the initial checkpoint, not the
+current status. Later production-browser acceptance covered error recovery,
+repeated input/source/budget changes, keyboard navigation and 390/650px layouts.
+[PR #38](https://github.com/hamflx/prosemirror-diff/pull/38) merged on 2026-10-28
+at `8a577df265928ddc808a5a76b8b8797070a249fa`. Its exact head was
+`42622d79aaab0a1b594d215bb471fbf846e492d4`; the 440-test suite, source and
+browser/Worker types, library and demo builds passed. No remote CI result was
+available. The fixed-schema, input-size and preservation limitations still apply.

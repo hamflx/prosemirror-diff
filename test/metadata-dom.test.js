@@ -18,7 +18,7 @@ beforeEach(async () => {
   // jsdom has no layout/scrolling. Stub only this browser operation, not the
   // comparison, renderer, controls, selectors or their event listeners.
   Object.defineProperty(Element.prototype, 'scrollIntoView', {configurable: true, value: scroll})
-  await import('../example/src/metadata-demo.js')
+  await import('../example/src/metadata-demo-entry.js')
 })
 
 afterEach(() => {

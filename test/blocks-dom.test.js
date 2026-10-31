@@ -18,7 +18,7 @@ beforeEach(async () => {
   originalScroll = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView')
   scroll = vi.fn()
   Object.defineProperty(Element.prototype, 'scrollIntoView', {configurable: true, value: scroll})
-  await import('../example/src/blocks-demo.js')
+  await import('../example/src/blocks-demo-entry.js')
 })
 afterEach(() => {
   if (originalScroll) Object.defineProperty(Element.prototype, 'scrollIntoView', originalScroll)

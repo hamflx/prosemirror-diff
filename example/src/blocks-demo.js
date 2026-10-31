@@ -1,3 +1,4 @@
+import {equalBlockAnchors,mountPairedLayout} from './paired-layout.js'
 import {compareDocumentBlocks} from '../../src/blocks.js'
 import {scenarios} from './blocks-scenarios.js'
 import {element, renderDocument, boundaryKey, changeEntries} from './blocks-view.js'
@@ -5,7 +6,9 @@ import {createTextReview} from './text-review-view.js'
 import {createSelectedReview} from './selected-review.js'
 import './blocks-demo.css'
 
-const byId = id => document.getElementById(id)
+export function mountBlocksDemo(root) {
+
+const byId = id => root.querySelector("#" + id)
 const select = /** @type {HTMLSelectElement} */ (byId('scenario'))
 const budget = /** @type {HTMLSelectElement} */ (byId('budget'))
 const depth = /** @type {HTMLSelectElement} */ (byId('depth'))
@@ -16,7 +19,7 @@ const views = {}
 const buttons = []
 let entries = []
 let selected = -1
-let textReview
+let textReview,pairedLayout
 
 function activate(index, scroll = false) {
   selected = index >= 0 && index < entries.length ? index : -1
@@ -50,6 +53,7 @@ function activate(index, scroll = false) {
     ? `Change ${selected + 1} of ${entries.length} · item ${entry.label} · ${change.kind} · located on both sides`
     : 'No block changes'
   textReview.select(entry, views)
+  pairedLayout?.measure()
 }
 
 function renderList() {
@@ -85,6 +89,7 @@ function renderList() {
 }
 
 function load() {
+  pairedLayout?.dispose()
   textReview?.dispose()
   const scenario = scenarios.find(item => item.id === select.value)
   entries = []
@@ -116,6 +121,7 @@ function load() {
   ].join(' ')
   views.old = renderDocument(scenario.oldDoc, byId('before'))
   views.new = renderDocument(scenario.newDoc, byId('after'))
+  pairedLayout=mountPairedLayout([byId('before'),byId('after')],equalBlockAnchors(scenario.oldDoc,scenario.newDoc).map(([a,b])=>[views.old.targets.find(t=>t.from===a)?.element,views.new.targets.find(t=>t.from===b)?.element]))
   textReview = createSelectedReview(createTextReview())
   renderList()
   activate(entries.length ? 0 : -1)
@@ -133,3 +139,6 @@ depth.addEventListener('change', load)
 previous.addEventListener('click', () => activate(selected - 1, true))
 next.addEventListener('click', () => activate(selected + 1, true))
 load()
+
+return {dispose(){pairedLayout?.dispose();textReview?.dispose();root.replaceChildren()}}
+}

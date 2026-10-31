@@ -9,7 +9,7 @@ const choose = value => {
 beforeEach(async () => {
   vi.resetModules()
   document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML
-  await import('../example/src/legacy-migration-demo.js')
+  await import('../example/src/legacy-migration-demo-entry.js')
 })
 afterEach(() => document.body.replaceChildren())
 

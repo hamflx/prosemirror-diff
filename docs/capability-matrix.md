@@ -18,7 +18,23 @@ Build the static laboratory with `npx vite build --config example/vite.showcase.
 | Package formats and types | Distribution interface | Integration guide | CJS, ESM, UMD builds and TypeScript fixtures; repository additions are not all in npm 0.0.8 |
 | Compatibility and performance | Validation evidence | README and evolution records | Pinned compatibility fixtures and reproducible baselines, no universal latency or speedup claim |
 
-## Maintenance gate
+## Navigation and lifecycle
+
+The site has three primary routes: `#home`, `#docs` and `#examples/aligned`.
+All seven examples mount in the same document; there are no embedded frames or
+second-page links required to use an example. Example links are stable hash
+routes (`aligned`, `attributes`, `blocks`, `metadata`, `tables`, `legacy`,
+`integration`) and work on refresh and browser back/forward navigation.
+Switching examples disposes active Workers and alignment observers before the
+next example mounts. The original standalone example HTML files remain useful
+for focused development and use the same mount functions.
+
+Demo styles are scoped to their surface, and each mounted instance resolves
+controls within its own root. Static markup templates are bundled source files;
+user JSON is never interpreted as HTML. This keeps the site shell separate from
+comparison logic without duplicating the consumers or retaining hidden frames.
+
+## Architecture review
 
 After each coherent feature group, inspect module boundaries, API consistency, repeated logic, dependency changes, test structure and documentation. Record concrete debt and its impact before choosing a small refactor. Re-run relevant regression and browser acceptance after changes. Do not broaden schema, matching or performance guarantees as a substitute for evidence.
 
